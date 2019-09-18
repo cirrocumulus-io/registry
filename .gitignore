@@ -1,0 +1,6 @@
+# Gradle
+.gradle
+
+# JetBrains
+.idea
+*.iml

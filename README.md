@@ -9,7 +9,15 @@ Provide a REST API to share image used by Cirrocumulus.
 ```
 
 ## How to execute
-Nothing to execute yet, the project is too young :stuck_out_tongue_closed_eyes:
+- With Gradle:
+```shell
+./gradlew run
+```
+
+- With Java
+```shell
+java -jar api/build/libs/repository-api-0.1.0-SNAPSHOT.jar
+```
 
 ## How to contribute
 Please open an issue to propose your feature!

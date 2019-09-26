@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd">
+    <changeSet id="1" author="Guillaume Leroy">
+        <sql>CREATE EXTENSION IF NOT EXISTS "uuid-ossp";</sql>
+
+        <createTable tableName="user">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="username" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true" />
+            </column>
+            <column name="password" type="VARCHAR(100)">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+
+        <sql>INSERT INTO "user" VALUES (uuid_generate_v4(), 'admin',
+            '$2y$12$21SFFJSkRWjAeFt21v5mOe6lzDb7bvDfgcBVG66UB6/2mBYv8xOxS');
+        </sql>
+
+        <rollback>
+            <dropTable tableName="user" />
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

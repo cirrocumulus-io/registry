@@ -9,15 +9,16 @@ Provide a REST API to share image used by Cirrocumulus.
 ```
 
 ## How to execute
-- With Gradle:
+### Prerequisites
+* docker
+* docker-compose
+
 ```shell
-./gradlew run
+docker-compose up -d
+./gradlew update run
 ```
 
-- With Java
-```shell
-java -jar api/build/libs/repository-api-0.1.0-SNAPSHOT.jar
-```
+A first user is created with username `admin` and password `changeit`.
 
 ## How to contribute
 Please open an issue to propose your feature!

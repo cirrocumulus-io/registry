@@ -1,10 +1,22 @@
 plugins {
     application
     kotlin("jvm")
+    id("org.liquibase.gradle") version "2.0.1"
 }
 
 application {
     mainClassName = "io.cirrocumulus.registry.api.AppKt"
+}
+
+liquibase {
+    activities.register("main") {
+        arguments = mapOf(
+                "changeLogFile" to "src/main/resources/db/changelog.xml",
+                "url" to "jdbc:postgresql://localhost:5432/cirrocumulus_registry",
+                "username" to "cirrocumulus_registry",
+                "password" to "cirrocumulus_registry"
+        )
+    }
 }
 
 dependencies {
@@ -24,6 +36,9 @@ dependencies {
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion") {
         exclude("org.jetbrains.kotlinx")
     }
+
+    liquibaseRuntime("org.liquibase:liquibase-core:3.8.0")
+    liquibaseRuntime("org.postgresql:postgresql:42.2.8")
 
     runtime("ch.qos.logback:logback-classic:1.2.3")
 }

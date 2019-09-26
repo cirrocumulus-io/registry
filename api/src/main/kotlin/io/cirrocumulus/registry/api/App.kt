@@ -3,13 +3,14 @@ package io.cirrocumulus.registry.api
 import io.cirrocumulus.registry.api.v1.image
 import io.ktor.application.Application
 import io.ktor.application.install
+import io.ktor.auth.Authentication
 import io.ktor.auth.basic
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 
 fun Application.module() {
-    install(io.ktor.auth.Authentication) {
+    install(Authentication) {
         basic(name = "user") {
             realm = "Cirrocumulus Registry"
             validate { null }

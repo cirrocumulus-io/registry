@@ -8,6 +8,12 @@ Provide a REST API to share image used by Cirrocumulus.
 ./gradlew assemble
 ```
 
+## How to test
+```shell
+docker-compose up -d
+./gradlew check
+```
+
 ## How to execute
 ### Prerequisites
 * docker

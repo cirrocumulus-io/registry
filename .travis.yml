@@ -22,4 +22,8 @@ jobs:
 
     - stage: test
       name: Test
+      services: postgresql
+      before_script:
+        - psql -U postgres -c "CREATE USER cirrocumulus_registry WITH SUPERUSER PASSWORD 'cirrocumulus_registry';"
+        - psql -U postgres -c "CREATE DATABASE cirrocumulus_registry OWNER cirrocumulus_registry;"
       script: ./gradlew check

@@ -9,7 +9,7 @@ import io.ktor.server.testing.withTestApplication
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
-internal class AppKtTest {
+class AppKtTest {
     @Nested
     inner class Security {
         @Test

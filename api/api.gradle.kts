@@ -19,7 +19,21 @@ liquibase {
     }
 }
 
+repositories {
+    // FIXME: Remove at R2DBC release
+    maven("https://repo.spring.io/milestone")
+}
+
 dependencies {
+    implementation(project(":cirrocumulus-registry-core"))
+
+    val coroutinesVersion = "1.3.2"
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutinesVersion")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutinesVersion")
+
+    implementation("org.mindrot:jbcrypt:0.4")
+
     val jUnitVersion = "5.5.2"
     testImplementation("org.junit.jupiter:junit-jupiter-api:$jUnitVersion")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:$jUnitVersion")
@@ -41,6 +55,11 @@ dependencies {
     liquibaseRuntime("org.postgresql:postgresql:42.2.8")
 
     runtime("ch.qos.logback:logback-classic:1.2.3")
+
+    val r2dbcVersion = "0.8.0.RC1"
+    implementation("io.r2dbc:r2dbc-client:$r2dbcVersion")
+    implementation("io.r2dbc:r2dbc-pool:$r2dbcVersion")
+    runtime("io.r2dbc:r2dbc-postgresql:$r2dbcVersion")
 }
 
 tasks.withType<Jar> {
@@ -50,4 +69,8 @@ tasks.withType<Jar> {
     }
 
     from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+}
+
+tasks.withType<Test> {
+    dependsOn("update")
 }

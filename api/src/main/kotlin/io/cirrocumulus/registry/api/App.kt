@@ -10,6 +10,11 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 
 fun Application.module() {
+    val dbConfig = Configuration.Database(
+        username = "cirrocumulus_registry",
+        password = "cirrocumulus_registry"
+    )
+
     install(Authentication) {
         basic(name = "user") {
             realm = "Cirrocumulus Registry"

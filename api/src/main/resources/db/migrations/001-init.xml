@@ -19,8 +19,9 @@
             </column>
         </createTable>
 
-        <sql>INSERT INTO "user" VALUES (uuid_generate_v4(), 'admin',
-            '$2y$12$21SFFJSkRWjAeFt21v5mOe6lzDb7bvDfgcBVG66UB6/2mBYv8xOxS');
+        <sql>
+            INSERT INTO "user"
+            VALUES (uuid_generate_v4(), 'admin', '$2a$12$21SFFJSkRWjAeFt21v5mOe6lzDb7bvDfgcBVG66UB6/2mBYv8xOxS');
         </sql>
 
         <rollback>

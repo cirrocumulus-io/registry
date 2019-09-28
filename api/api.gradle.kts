@@ -26,6 +26,7 @@ repositories {
 
 dependencies {
     implementation(project(":cirrocumulus-registry-core"))
+    implementation(project(":cirrocumulus-registry-dto"))
 
     val coroutinesVersion = "1.3.2"
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")

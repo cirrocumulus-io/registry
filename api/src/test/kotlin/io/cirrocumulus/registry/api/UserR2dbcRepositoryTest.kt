@@ -30,7 +30,7 @@ class UserR2dbcRepositoryTest {
         @Test
         fun `should return null if username does not exist`() = runBlocking {
             val user = repository.findByCredentials("username", "password")
-            user shouldBe null
+            user.shouldBeNull()
         }
 
         @Test
@@ -43,9 +43,9 @@ class UserR2dbcRepositoryTest {
         fun `should return user if credentials are valid`() = runBlocking {
             val user = repository.findByCredentials("admin", "changeit")
             user.shouldNotBeNull()
-            user should {
-                it.username shouldBe "admin"
-                it.password shouldBe "\$2a\$12\$21SFFJSkRWjAeFt21v5mOe6lzDb7bvDfgcBVG66UB6/2mBYv8xOxS"
+            user should { (_, username, password) ->
+                username shouldBe "admin"
+                password shouldBe "\$2a\$12\$21SFFJSkRWjAeFt21v5mOe6lzDb7bvDfgcBVG66UB6/2mBYv8xOxS"
             }
         }
     }

@@ -1,0 +1,7 @@
+{
+  "code": "invalid_file_content_type",
+  "parameter": "file",
+  "allowedContentTypes": [
+    "application/octet-stream"
+  ]
+}

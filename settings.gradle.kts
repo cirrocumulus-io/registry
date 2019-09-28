@@ -8,4 +8,4 @@ fun includeModule(name: String) {
     project.buildFileName = "$name.gradle.kts"
 }
 
-arrayOf("api", "core").forEach { includeModule(it) }
+arrayOf("api", "core", "dto").forEach { includeModule(it) }

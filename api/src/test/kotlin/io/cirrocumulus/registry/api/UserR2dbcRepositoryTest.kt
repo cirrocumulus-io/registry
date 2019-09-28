@@ -1,8 +1,9 @@
 package io.cirrocumulus.registry.api
 
+import io.kotlintest.matchers.types.shouldBeNull
+import io.kotlintest.matchers.types.shouldNotBeNull
 import io.kotlintest.should
 import io.kotlintest.shouldBe
-import io.kotlintest.shouldNotBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
@@ -35,14 +36,14 @@ class UserR2dbcRepositoryTest {
         @Test
         fun `should return null if password does not match`() = runBlocking {
             val user = repository.findByCredentials("admin", "password")
-            user shouldBe null
+            user.shouldBeNull()
         }
 
         @Test
         fun `should return user if credentials are valid`() = runBlocking {
             val user = repository.findByCredentials("admin", "changeit")
-            user shouldNotBe null
-            user!! should {
+            user.shouldNotBeNull()
+            user should {
                 it.username shouldBe "admin"
                 it.password shouldBe "\$2a\$12\$21SFFJSkRWjAeFt21v5mOe6lzDb7bvDfgcBVG66UB6/2mBYv8xOxS"
             }

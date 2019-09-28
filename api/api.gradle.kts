@@ -40,7 +40,9 @@ dependencies {
 
     implementation(kotlin("stdlib"))
 
-    testImplementation("io.kotlintest:kotlintest-runner-junit5:3.4.2")
+    val kotlintestVersion = "3.4.2"
+    testImplementation("io.kotlintest:kotlintest-core:$kotlintestVersion")
+    testRuntime("io.kotlintest:kotlintest-runner-junit5:$kotlintestVersion")
 
     val ktorVersion = "1.2.4"
     implementation("io.ktor:ktor-auth:$ktorVersion")

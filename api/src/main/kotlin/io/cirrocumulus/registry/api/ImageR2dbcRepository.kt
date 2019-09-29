@@ -2,7 +2,7 @@ package io.cirrocumulus.registry.api
 
 import io.cirrocumulus.registry.core.ImageFormat
 import io.r2dbc.client.R2dbc
-import kotlinx.coroutines.reactive.awaitFirst
+import kotlinx.coroutines.reactive.awaitSingle
 
 class ImageR2dbcRepository(
     private val dbClient: R2dbc
@@ -46,6 +46,7 @@ class ImageR2dbcRepository(
                     .bind("$3", version)
                     .bind("$4", formatType.toString())
                     .mapRow { row, _ -> row[0] as Boolean }
+                    .single()
             }
-            .awaitFirst()
+            .awaitSingle()
 }

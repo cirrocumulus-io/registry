@@ -14,6 +14,16 @@ class ErrorDtoTest {
     )
 
     @Nested
+    inner class InvalidFileFormat : JsonTest(
+        "error/invalid-file-format",
+        InvalidFileFormatErrorDto(
+            "file",
+            setOf("qcow2")
+        ),
+        ErrorDto::class
+    )
+
+    @Nested
     inner class InvalidRequestContentType : JsonTest(
         "error/invalid-request-content-type",
         InvalidRequestContentTypeErrorDto("application/json"),

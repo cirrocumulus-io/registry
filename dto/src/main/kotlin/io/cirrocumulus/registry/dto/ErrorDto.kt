@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 
 private const val InvalidFileContentTypeCodeValue = "invalid_file_content_type"
+private const val InvalidFileFormatCodeValue = "invalid_file_format"
 private const val InvalidRequestContentTypeCodeValue = "invalid_request_content_type"
 private const val MalformedRequestCodeValue = "malformed_request"
 private const val MissingParameterCodeValue = "missing_parameter"
@@ -16,6 +17,7 @@ private const val MissingParameterCodeValue = "missing_parameter"
 )
 @JsonSubTypes(
     JsonSubTypes.Type(value = InvalidFileContentTypeErrorDto::class, name = InvalidFileContentTypeCodeValue),
+    JsonSubTypes.Type(value = InvalidFileFormatErrorDto::class, name = InvalidFileFormatCodeValue),
     JsonSubTypes.Type(value = InvalidRequestContentTypeErrorDto::class, name = InvalidRequestContentTypeCodeValue),
     JsonSubTypes.Type(value = MissingParameterErrorDto::class, name = MissingParameterCodeValue)
 )
@@ -23,6 +25,9 @@ sealed class ErrorDto {
     enum class Code {
         @JsonProperty(InvalidFileContentTypeCodeValue)
         InvalidFileContentType,
+
+        @JsonProperty(InvalidFileFormatCodeValue)
+        InvalidFileFormat,
 
         @JsonProperty(InvalidRequestContentTypeCodeValue)
         InvalidRequestContentType,
@@ -46,6 +51,13 @@ data class InvalidFileContentTypeErrorDto(
     val allowedContentTypes: Set<String>
 ) : InvalidParameterErrorDto() {
     override val code = Code.InvalidFileContentType
+}
+
+data class InvalidFileFormatErrorDto(
+    override val parameter: String,
+    val allowedFileFormats: Set<String>
+) : InvalidParameterErrorDto() {
+    override val code = Code.InvalidFileFormat
 }
 
 data class InvalidRequestContentTypeErrorDto(

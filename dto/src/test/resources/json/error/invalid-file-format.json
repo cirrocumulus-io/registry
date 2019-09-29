@@ -1,0 +1,7 @@
+{
+  "code": "invalid_file_format",
+  "parameter": "file",
+  "allowedFileFormats": [
+    "qcow2"
+  ]
+}

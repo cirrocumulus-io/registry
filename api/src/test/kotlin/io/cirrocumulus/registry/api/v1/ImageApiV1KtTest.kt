@@ -2,7 +2,6 @@ package io.cirrocumulus.registry.api.v1
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import io.cirrocumulus.registry.api.DefaultImageHandler
 import io.cirrocumulus.registry.api.module
 import io.cirrocumulus.registry.dto.ErrorDto
 import io.cirrocumulus.registry.dto.InvalidFileContentTypeErrorDto
@@ -71,12 +70,12 @@ class ImageApiV1KtTest {
         fun `bad request with no file parameter value`() = withTestApplication(Application::module) {
             val request = handleRequest(HttpMethod.Post, "/v1/debian/9.0") {
                 addHeader(HttpHeaders.Authorization, "Basic ${"admin:changeit".encodeBase64()}")
-                fillBodyWithTestFile(ContentType.Application.OctetStream, "parameter")
+                fillBodyWithTestFile(ContentType.Application.OctetStream, "parameter", "test.qcow2")
             }
             with(request) {
                 response.status() shouldBe HttpStatusCode.BadRequest
                 response.content.should { body ->
-                    val dto = MissingParameterErrorDto(DefaultImageHandler.FileParameter)
+                    val dto = MissingParameterErrorDto(FileParameter)
                     body.shouldNotBeNull()
                     mapper.readValue<ErrorDto>(body) shouldBe dto
                 }
@@ -87,14 +86,14 @@ class ImageApiV1KtTest {
         fun `bad request with wrong file content type`() = withTestApplication(Application::module) {
             val request = handleRequest(HttpMethod.Post, "/v1/debian/9.0") {
                 addHeader(HttpHeaders.Authorization, "Basic ${"admin:changeit".encodeBase64()}")
-                fillBodyWithTestFile(ContentType.Application.Json, "file")
+                fillBodyWithTestFile(ContentType.Application.Json, "file", "test.qcow2")
             }
             with(request) {
                 response.status() shouldBe HttpStatusCode.BadRequest
                 response.content.should { body ->
                     val dto = InvalidFileContentTypeErrorDto(
-                        DefaultImageHandler.FileParameter,
-                        DefaultImageHandler.AllowedFileContentTypes.map { it.toString() }.toSet()
+                        FileParameter,
+                        AllowedFileContentTypes.map { it.toString() }.toSet()
                     )
                     body.shouldNotBeNull()
                     mapper.readValue<ErrorDto>(body) shouldBe dto
@@ -102,7 +101,30 @@ class ImageApiV1KtTest {
             }
         }
 
-        fun TestApplicationRequest.fillBodyWithTestFile(contentType: ContentType, parameter: String) {
+        @Test
+        fun `bad request with wrong file format`() = withTestApplication(Application::module) {
+            val request = handleRequest(HttpMethod.Post, "/v1/debian/9.0") {
+                addHeader(HttpHeaders.Authorization, "Basic ${"admin:changeit".encodeBase64()}")
+                fillBodyWithTestFile(ContentType.Application.Json, "file", "test.txt")
+            }
+            with(request) {
+                response.status() shouldBe HttpStatusCode.BadRequest
+                response.content.should { body ->
+                    val dto = InvalidFileContentTypeErrorDto(
+                        FileParameter,
+                        AllowedFileContentTypes.map { it.toString() }.toSet()
+                    )
+                    body.shouldNotBeNull()
+                    mapper.readValue<ErrorDto>(body) shouldBe dto
+                }
+            }
+        }
+
+        fun TestApplicationRequest.fillBodyWithTestFile(
+            contentType: ContentType,
+            parameter: String,
+            filename: String?
+        ) {
             val boundary = "boundary"
             addHeader(
                 HttpHeaders.ContentType,
@@ -120,7 +142,7 @@ class ImageApiV1KtTest {
                                 listOf(
                                     ContentDisposition.File
                                         .withParameter(ContentDisposition.Parameters.Name, parameter)
-                                        .withParameter(ContentDisposition.Parameters.FileName, "test.qcow2")
+                                        .withParameter(ContentDisposition.Parameters.FileName, filename!!)
                                         .toString()
                                 )
                             ),

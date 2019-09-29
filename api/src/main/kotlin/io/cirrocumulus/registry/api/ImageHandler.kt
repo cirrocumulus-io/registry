@@ -1,7 +1,7 @@
 package io.cirrocumulus.registry.api
 
-import io.ktor.application.ApplicationCall
+import io.cirrocumulus.registry.core.ImageFormat
 
 interface ImageHandler {
-    suspend fun handleUpload(call: ApplicationCall)
+    suspend fun handleUpload(group: String, name: String, version: String): ImageFormat
 }

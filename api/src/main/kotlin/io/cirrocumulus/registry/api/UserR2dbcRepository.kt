@@ -23,8 +23,9 @@ class UserR2dbcRepository(
                 .select("SELECT * FROM $UserTable WHERE $UsernameColumnName = $1")
                 .bind("$1", username)
                 .mapRow { row, _ -> row.toUser() }
+                .singleOrEmpty()
+                .filter { BCrypt.checkpw(password, it.password) }
         }
-        .filter { BCrypt.checkpw(password, it.password) }
         .awaitFirstOrNull()
 
     private fun Row.toUser(): User = User(

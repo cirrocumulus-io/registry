@@ -2,6 +2,7 @@ package io.cirrocumulus.registry.api
 
 import io.cirrocumulus.registry.api.v1.image
 import io.cirrocumulus.registry.dto.InvalidFileContentTypeErrorDto
+import io.cirrocumulus.registry.dto.InvalidFileFormatErrorDto
 import io.cirrocumulus.registry.dto.InvalidRequestContentTypeErrorDto
 import io.cirrocumulus.registry.dto.MissingParameterErrorDto
 import io.ktor.application.Application
@@ -28,6 +29,7 @@ fun Application.module() {
         username = "cirrocumulus_registry",
         password = "cirrocumulus_registry"
     ).createClient()
+    val imageRepository = ImageR2dbcRepository(dbClient)
     val userRepository = UserR2dbcRepository(dbClient)
 
     install(Authentication) {
@@ -49,6 +51,7 @@ fun Application.module() {
         exception<InvalidRequestException> { exception ->
             val dto = when (exception) {
                 is InvalidFileContentTypeException -> exception.toDto()
+                is InvalidFileFormatException -> exception.toDto()
                 is InvalidRequestContentTypeException -> exception.toDto()
                 is MissingParameterException -> exception.toDto()
             }
@@ -57,7 +60,7 @@ fun Application.module() {
     }
 
     routing {
-        image()
+        image(imageRepository)
     }
 }
 
@@ -65,6 +68,8 @@ private fun InvalidFileContentTypeException.toDto() = InvalidFileContentTypeErro
     parameter,
     allowedContentTypes.map { it.toString() }.toSet()
 )
+
+private fun InvalidFileFormatException.toDto() = InvalidFileFormatErrorDto(parameter, allowedFileFormats)
 
 private fun InvalidRequestContentTypeException.toDto() = InvalidRequestContentTypeErrorDto(
     expectedContentType.toString()

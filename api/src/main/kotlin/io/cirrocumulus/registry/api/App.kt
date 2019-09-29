@@ -19,16 +19,17 @@ import io.ktor.response.respond
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.r2dbc.client.R2dbc
 
 fun main(args: Array<String>) {
-    embeddedServer(Netty, 8080, module = Application::module).start(true)
-}
-
-fun Application.module() {
     val dbClient = Configuration.Database(
         username = "cirrocumulus_registry",
         password = "cirrocumulus_registry"
     ).createClient()
+    embeddedServer(Netty, 8080) { module(dbClient) }.start(true)
+}
+
+fun Application.module(dbClient: R2dbc) {
     val imageRepository = ImageR2dbcRepository(dbClient)
     val userRepository = UserR2dbcRepository(dbClient)
 

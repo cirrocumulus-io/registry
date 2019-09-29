@@ -2,6 +2,7 @@ package io.cirrocumulus.registry.api.v1
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import io.cirrocumulus.registry.api.DbClient
 import io.cirrocumulus.registry.api.module
 import io.cirrocumulus.registry.dto.ErrorDto
 import io.cirrocumulus.registry.dto.InvalidFileContentTypeErrorDto
@@ -11,7 +12,6 @@ import io.kotlintest.matchers.types.shouldBeNull
 import io.kotlintest.matchers.types.shouldNotBeNull
 import io.kotlintest.should
 import io.kotlintest.shouldBe
-import io.ktor.application.Application
 import io.ktor.http.*
 import io.ktor.http.content.PartData
 import io.ktor.server.testing.TestApplicationRequest
@@ -32,7 +32,7 @@ class ImageApiV1KtTest {
     @Nested
     inner class upload {
         @Test
-        fun `unauthorized with no authorization header`() = withTestApplication(Application::module) {
+        fun `unauthorized with no authorization header`() = withTestApplication({ module(DbClient) }) {
             with(handleRequest(HttpMethod.Post, "/v1/debian/9.0")) {
                 response.status() shouldBe HttpStatusCode.Unauthorized
                 response.content.shouldBeNull()
@@ -40,7 +40,7 @@ class ImageApiV1KtTest {
         }
 
         @Test
-        fun `unauthorized with wrong credentials`() = withTestApplication(Application::module) {
+        fun `unauthorized with wrong credentials`() = withTestApplication({ module(DbClient) }) {
             val request = handleRequest(HttpMethod.Post, "/v1/debian/9.0") {
                 addHeader(HttpHeaders.Authorization, "Basic ${"admin:change".encodeBase64()}")
             }
@@ -51,7 +51,7 @@ class ImageApiV1KtTest {
         }
 
         @Test
-        fun `bad request with wrong content type header`() = withTestApplication(Application::module) {
+        fun `bad request with wrong content type header`() = withTestApplication({ module(DbClient) }) {
             val request = handleRequest(HttpMethod.Post, "/v1/debian/9.0") {
                 addHeader(HttpHeaders.Authorization, "Basic ${"admin:changeit".encodeBase64()}")
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -67,7 +67,7 @@ class ImageApiV1KtTest {
         }
 
         @Test
-        fun `bad request with no file parameter value`() = withTestApplication(Application::module) {
+        fun `bad request with no file parameter value`() = withTestApplication({ module(DbClient) }) {
             val request = handleRequest(HttpMethod.Post, "/v1/debian/9.0") {
                 addHeader(HttpHeaders.Authorization, "Basic ${"admin:changeit".encodeBase64()}")
                 fillBodyWithTestFile(ContentType.Application.OctetStream, "parameter", "test.qcow2")
@@ -83,7 +83,7 @@ class ImageApiV1KtTest {
         }
 
         @Test
-        fun `bad request with wrong file content type`() = withTestApplication(Application::module) {
+        fun `bad request with wrong file content type`() = withTestApplication({ module(DbClient) }) {
             val request = handleRequest(HttpMethod.Post, "/v1/debian/9.0") {
                 addHeader(HttpHeaders.Authorization, "Basic ${"admin:changeit".encodeBase64()}")
                 fillBodyWithTestFile(ContentType.Application.Json, "file", "test.qcow2")
@@ -102,7 +102,7 @@ class ImageApiV1KtTest {
         }
 
         @Test
-        fun `bad request with wrong file format`() = withTestApplication(Application::module) {
+        fun `bad request with wrong file format`() = withTestApplication({ module(DbClient) }) {
             val request = handleRequest(HttpMethod.Post, "/v1/debian/9.0") {
                 addHeader(HttpHeaders.Authorization, "Basic ${"admin:changeit".encodeBase64()}")
                 fillBodyWithTestFile(ContentType.Application.Json, "file", "test.txt")

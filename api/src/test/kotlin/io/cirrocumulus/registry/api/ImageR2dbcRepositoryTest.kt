@@ -9,16 +9,11 @@ import org.junit.jupiter.api.Test
 
 @Suppress("ClassName")
 class ImageR2dbcRepositoryTest {
-    val dbClient = Configuration.Database(
-        username = "cirrocumulus_registry",
-        password = "cirrocumulus_registry"
-    ).createClient()
-
     lateinit var repository: ImageR2dbcRepository
 
     @BeforeEach
     fun beforeEach() {
-        repository = ImageR2dbcRepository(dbClient)
+        repository = ImageR2dbcRepository(DbClient)
     }
 
     @Nested

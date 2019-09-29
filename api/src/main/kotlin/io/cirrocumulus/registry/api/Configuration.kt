@@ -21,7 +21,7 @@ data class Configuration(
             val dbConnectionFactory = ConnectionFactories.get(
                 ConnectionFactoryOptions
                     .builder()
-                    .option(Option.valueOf("driver"), "pool")
+                    .option(Option.valueOf("driver"), "postgresql")
                     .option(Option.valueOf("protocol"), "postgresql")
                     .option(Option.valueOf("host"), host)
                     .option(Option.valueOf("port"), port)
@@ -33,6 +33,7 @@ data class Configuration(
             val dbConnectionPool = ConnectionPool(
                 ConnectionPoolConfiguration
                     .builder(dbConnectionFactory)
+                    .maxSize(10)
                     .build()
             )
             return R2dbc(dbConnectionPool)

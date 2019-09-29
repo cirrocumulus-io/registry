@@ -9,6 +9,11 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.*
 
+val DbClient = Configuration.Database(
+    username = "cirrocumulus_registry",
+    password = "cirrocumulus_registry"
+).createClient()
+
 const val ClearPassword = "changeit"
 val User1 = User(
     id = UUID.fromString("3c2149ac-e838-4715-9cb0-1b3427810c49"),

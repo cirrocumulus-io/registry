@@ -8,13 +8,13 @@
         <sql>CREATE EXTENSION IF NOT EXISTS "uuid-ossp";</sql>
 
         <createTable tableName="user">
-            <column name="id" type="UUID">
+            <column name="id" type="uuid">
                 <constraints primaryKey="true" nullable="false" />
             </column>
-            <column name="username" type="VARCHAR(50)">
+            <column name="username" type="varchar(50)">
                 <constraints nullable="false" unique="true" />
             </column>
-            <column name="password" type="VARCHAR(100)">
+            <column name="password" type="varchar(100)">
                 <constraints nullable="false" />
             </column>
         </createTable>
@@ -24,7 +24,84 @@
             VALUES (uuid_generate_v4(), 'admin', '$2a$12$21SFFJSkRWjAeFt21v5mOe6lzDb7bvDfgcBVG66UB6/2mBYv8xOxS');
         </sql>
 
+        <createTable tableName="image">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="owner_id" type="uuid">
+                <constraints nullable="false" />
+            </column>
+            <column name="group" type="varchar(50)">
+                <constraints nullable="false" />
+            </column>
+            <column name="name" type="varchar(50)">
+                <constraints nullable="false" />
+            </column>
+            <column name="creation_date" type="timestamp with time zone">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="image"
+                                 baseColumnNames="owner_id"
+                                 constraintName="image_owner_fk"
+                                 referencedTableName="user"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE" />
+
+        <createTable tableName="image_version">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="image_id" type="uuid">
+                <constraints nullable="false" />
+            </column>
+            <column name="name" type="varchar(50)">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="image_version"
+                                 baseColumnNames="image_id"
+                                 constraintName="image_version_image_fk"
+                                 referencedTableName="image"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE" />
+
+        <sql>
+            CREATE TYPE format_type AS ENUM ('qcow2');
+        </sql>
+
+        <createTable tableName="image_format">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="version_id" type="uuid">
+                <constraints nullable="false" />
+            </column>
+            <column name="type" type="format_type">
+                <constraints nullable="false" />
+            </column>
+            <column name="url" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="sha512" type="varchar(128)">
+                <constraints unique="false" />
+            </column>
+            <column name="creation_date" type="timestamp with time zone">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="image_format"
+                                 baseColumnNames="version_id"
+                                 constraintName="image_format_version_fk"
+                                 referencedTableName="image_version"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE" />
+
         <rollback>
+            <dropTable tableName="image_format" />
+            <sql>DROP TYPE format_type;</sql>
+            <dropTable tableName="image_version" />
+            <dropTable tableName="image" />
             <dropTable tableName="user" />
         </rollback>
     </changeSet>

@@ -9,6 +9,13 @@ Provide a REST API to share image used by Cirrocumulus.
 ```
 
 ## How to test
+:warning: **The database is reset before tests executing**
+
+### Prerequisites
+* docker
+* docker-compose
+* psql
+
 ```shell
 docker-compose up -d
 ./gradlew check

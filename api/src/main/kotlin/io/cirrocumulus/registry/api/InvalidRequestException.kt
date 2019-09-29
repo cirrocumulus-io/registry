@@ -1,5 +1,6 @@
 package io.cirrocumulus.registry.api
 
+import io.cirrocumulus.registry.core.ImageFormat
 import io.ktor.http.ContentType
 
 sealed class InvalidRequestException : Exception()
@@ -7,6 +8,10 @@ sealed class InvalidRequestException : Exception()
 sealed class InvalidParameterException : InvalidRequestException() {
     abstract val parameter: String
 }
+
+data class ImageFormatAlreadyExistsException(
+    val imageFormat: ImageFormat
+) : InvalidRequestException()
 
 class InvalidFileContentTypeException(
     override val parameter: String,

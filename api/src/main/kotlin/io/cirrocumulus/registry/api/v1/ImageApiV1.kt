@@ -9,6 +9,7 @@ import io.ktor.auth.principal
 import io.ktor.http.ContentType
 import io.ktor.http.content.PartData
 import io.ktor.http.content.readAllParts
+import io.ktor.http.content.streamProvider
 import io.ktor.request.isMultipart
 import io.ktor.request.receiveMultipart
 import io.ktor.routing.Route
@@ -19,7 +20,6 @@ import io.ktor.util.pipeline.PipelineContext
 import java.io.File
 
 val AllowedFileContentTypes = setOf(ContentType.Application.OctetStream)
-val AllowedFileExtensions = setOf("qcow2")
 
 const val FileParameter = "file"
 
@@ -31,12 +31,11 @@ fun Routing.image(imageRepository: ImageRepository): Route = route("/v1") {
 
     authenticate("user") {
         post("/{name}/{version}") {
-            val part = findFilePart()
-
             val group = call.principal<UserIdPrincipal>()!!.name
             val name = call.parameters[NamePathParameter]!!
             val version = call.parameters[VersionPathParameter]!!
-            handler.handleUpload(group, name, version)
+            val part = findFilePart()
+            handler.handleUpload(group, name, version, part.originalFileName!!, part.streamProvider())
         }
     }
 }
@@ -53,9 +52,9 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.findFilePart(): PartD
     if (!AllowedFileContentTypes.contains(part.contentType)) {
         throw InvalidFileContentTypeException(FileParameter, AllowedFileContentTypes)
     }
-    val fileExtension = part.contentDisposition?.name?.let { File(it).extension }
-    if (!AllowedFileExtensions.contains(fileExtension)) {
-        throw InvalidFileFormatException(FileParameter, AllowedFileExtensions)
+    val fileExtension = part.originalFileName?.let { File(it).extension }
+    if (!DefaultImageHandler.AllowedFileExtensions.contains(fileExtension)) {
+        throw InvalidFileFormatException(FileParameter, DefaultImageHandler.AllowedFileExtensions)
     }
     return part
 }

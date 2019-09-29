@@ -4,6 +4,6 @@ import java.util.*
 
 data class ImageVersion(
     val id: UUID = UUID.randomUUID(),
-    val name: String,
-    val formats: Set<ImageFormat>
+    val image: Image,
+    val name: String
 )

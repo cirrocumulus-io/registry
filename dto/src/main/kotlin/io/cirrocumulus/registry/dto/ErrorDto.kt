@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 
+private const val ImageFormatAlreadyExistsCodeValue = "image_format_already_exists"
 private const val InvalidFileContentTypeCodeValue = "invalid_file_content_type"
 private const val InvalidFileFormatCodeValue = "invalid_file_format"
 private const val InvalidRequestContentTypeCodeValue = "invalid_request_content_type"
@@ -16,6 +17,7 @@ private const val MissingParameterCodeValue = "missing_parameter"
     property = "code"
 )
 @JsonSubTypes(
+    JsonSubTypes.Type(value = ImageFormatAlreadyExistsErrorDto::class, name = ImageFormatAlreadyExistsCodeValue),
     JsonSubTypes.Type(value = InvalidFileContentTypeErrorDto::class, name = InvalidFileContentTypeCodeValue),
     JsonSubTypes.Type(value = InvalidFileFormatErrorDto::class, name = InvalidFileFormatCodeValue),
     JsonSubTypes.Type(value = InvalidRequestContentTypeErrorDto::class, name = InvalidRequestContentTypeCodeValue),
@@ -23,6 +25,9 @@ private const val MissingParameterCodeValue = "missing_parameter"
 )
 sealed class ErrorDto {
     enum class Code {
+        @JsonProperty(ImageFormatAlreadyExistsCodeValue)
+        ImageFormatAlreadyExists,
+
         @JsonProperty(InvalidFileContentTypeCodeValue)
         InvalidFileContentType,
 
@@ -44,6 +49,12 @@ sealed class ErrorDto {
 
 sealed class InvalidParameterErrorDto : ErrorDto() {
     abstract val parameter: String
+}
+
+object ImageFormatAlreadyExistsErrorDto : ErrorDto() {
+    override val code = Code.ImageFormatAlreadyExists
+
+    override fun equals(other: Any?): Boolean = other is ImageFormatAlreadyExistsErrorDto
 }
 
 data class InvalidFileContentTypeErrorDto(

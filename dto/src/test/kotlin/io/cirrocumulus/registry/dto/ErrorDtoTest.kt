@@ -4,6 +4,13 @@ import org.junit.jupiter.api.Nested
 
 class ErrorDtoTest {
     @Nested
+    inner class ImageFormatAlreadyExists : JsonTest(
+        "error/image-format-already-exists",
+        ImageFormatAlreadyExistsErrorDto,
+        ErrorDto::class
+    )
+
+    @Nested
     inner class InvalidFileContentType : JsonTest(
         "error/invalid-file-content-type",
         InvalidFileContentTypeErrorDto(

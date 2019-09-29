@@ -8,14 +8,15 @@ import io.r2dbc.spi.ConnectionFactoryOptions
 import io.r2dbc.spi.Option
 
 data class Configuration(
-    val db: Database
+    val db: Database = Database(),
+    val registry: Registry = Registry()
 ) {
     data class Database(
         val host: String = "localhost",
         val port: Int = 5432,
         val name: String = "cirrocumulus_registry",
-        val username: String,
-        val password: String
+        val username: String = "cirrocumulus_registry",
+        val password: String = "cirrocumulus_registry"
     ) {
         fun createClient(): R2dbc {
             val dbConnectionFactory = ConnectionFactories.get(
@@ -39,4 +40,8 @@ data class Configuration(
             return R2dbc(dbConnectionPool)
         }
     }
+
+    data class Registry(
+        val baseUrl: String = "http://localhost:8080"
+    )
 }

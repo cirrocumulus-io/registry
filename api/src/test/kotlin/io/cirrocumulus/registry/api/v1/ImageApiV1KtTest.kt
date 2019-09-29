@@ -2,12 +2,8 @@ package io.cirrocumulus.registry.api.v1
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import io.cirrocumulus.registry.api.DbClient
-import io.cirrocumulus.registry.api.module
-import io.cirrocumulus.registry.dto.ErrorDto
-import io.cirrocumulus.registry.dto.InvalidFileContentTypeErrorDto
-import io.cirrocumulus.registry.dto.InvalidRequestContentTypeErrorDto
-import io.cirrocumulus.registry.dto.MissingParameterErrorDto
+import io.cirrocumulus.registry.api.*
+import io.cirrocumulus.registry.dto.*
 import io.kotlintest.matchers.types.shouldBeNull
 import io.kotlintest.matchers.types.shouldNotBeNull
 import io.kotlintest.should
@@ -32,7 +28,7 @@ class ImageApiV1KtTest {
     @Nested
     inner class upload {
         @Test
-        fun `unauthorized with no authorization header`() = withTestApplication({ module(DbClient) }) {
+        fun `unauthorized when no authorization header`() = withTestApplication({ module(DbClient, Config) }) {
             with(handleRequest(HttpMethod.Post, "/v1/debian/9.0")) {
                 response.status() shouldBe HttpStatusCode.Unauthorized
                 response.content.shouldBeNull()
@@ -40,7 +36,7 @@ class ImageApiV1KtTest {
         }
 
         @Test
-        fun `unauthorized with wrong credentials`() = withTestApplication({ module(DbClient) }) {
+        fun `unauthorized when wrong credentials`() = withTestApplication({ module(DbClient, Config) }) {
             val request = handleRequest(HttpMethod.Post, "/v1/debian/9.0") {
                 addHeader(HttpHeaders.Authorization, "Basic ${"admin:change".encodeBase64()}")
             }
@@ -51,9 +47,9 @@ class ImageApiV1KtTest {
         }
 
         @Test
-        fun `bad request with wrong content type header`() = withTestApplication({ module(DbClient) }) {
+        fun `bad request when wrong content type header`() = withTestApplication({ module(DbClient, Config) }) {
             val request = handleRequest(HttpMethod.Post, "/v1/debian/9.0") {
-                addHeader(HttpHeaders.Authorization, "Basic ${"admin:changeit".encodeBase64()}")
+                addHeader(HttpHeaders.Authorization, User1.basicAuthentication())
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             }
             with(request) {
@@ -67,9 +63,9 @@ class ImageApiV1KtTest {
         }
 
         @Test
-        fun `bad request with no file parameter value`() = withTestApplication({ module(DbClient) }) {
+        fun `bad request when no file parameter value`() = withTestApplication({ module(DbClient, Config) }) {
             val request = handleRequest(HttpMethod.Post, "/v1/debian/9.0") {
-                addHeader(HttpHeaders.Authorization, "Basic ${"admin:changeit".encodeBase64()}")
+                addHeader(HttpHeaders.Authorization, User1.basicAuthentication())
                 fillBodyWithTestFile(ContentType.Application.OctetStream, "parameter", "test.qcow2")
             }
             with(request) {
@@ -83,9 +79,9 @@ class ImageApiV1KtTest {
         }
 
         @Test
-        fun `bad request with wrong file content type`() = withTestApplication({ module(DbClient) }) {
+        fun `bad request when wrong file content type`() = withTestApplication({ module(DbClient, Config) }) {
             val request = handleRequest(HttpMethod.Post, "/v1/debian/9.0") {
-                addHeader(HttpHeaders.Authorization, "Basic ${"admin:changeit".encodeBase64()}")
+                addHeader(HttpHeaders.Authorization, User1.basicAuthentication())
                 fillBodyWithTestFile(ContentType.Application.Json, "file", "test.qcow2")
             }
             with(request) {
@@ -102,18 +98,34 @@ class ImageApiV1KtTest {
         }
 
         @Test
-        fun `bad request with wrong file format`() = withTestApplication({ module(DbClient) }) {
+        fun `bad request when wrong file format`() = withTestApplication({ module(DbClient, Config) }) {
             val request = handleRequest(HttpMethod.Post, "/v1/debian/9.0") {
-                addHeader(HttpHeaders.Authorization, "Basic ${"admin:changeit".encodeBase64()}")
-                fillBodyWithTestFile(ContentType.Application.Json, "file", "test.txt")
+                addHeader(HttpHeaders.Authorization, User1.basicAuthentication())
+                fillBodyWithTestFile(ContentType.Application.OctetStream, "file", "test.txt")
             }
             with(request) {
                 response.status() shouldBe HttpStatusCode.BadRequest
                 response.content.should { body ->
-                    val dto = InvalidFileContentTypeErrorDto(
-                        FileParameter,
-                        AllowedFileContentTypes.map { it.toString() }.toSet()
-                    )
+                    val dto = InvalidFileFormatErrorDto(FileParameter, DefaultImageHandler.AllowedFileExtensions)
+                    body.shouldNotBeNull()
+                    mapper.readValue<ErrorDto>(body) shouldBe dto
+                }
+            }
+        }
+
+        @Test
+        fun `conflict when image format already exists`() = withTestApplication({ module(DbClient, Config) }) {
+            val request = handleRequest(HttpMethod.Post, "/v1/debian/9.0") {
+                addHeader(HttpHeaders.Authorization, User1.basicAuthentication())
+                fillBodyWithTestFile(ContentType.Application.OctetStream, "file", "test.qcow2")
+            }
+            with(request) {
+                response.status() shouldBe HttpStatusCode.Conflict
+                response.headers.should { headers ->
+                    headers[HttpHeaders.Location] shouldBe "${Config.registry.baseUrl}/${ImageFormat1_1.uri}"
+                }
+                response.content.should { body ->
+                    val dto = ImageFormatAlreadyExistsErrorDto
                     body.shouldNotBeNull()
                     mapper.readValue<ErrorDto>(body) shouldBe dto
                 }

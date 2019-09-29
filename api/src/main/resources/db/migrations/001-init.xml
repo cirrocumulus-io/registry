@@ -67,7 +67,7 @@
                                  onDelete="CASCADE" />
 
         <sql>
-            CREATE TYPE format_type AS ENUM ('qcow2');
+            CREATE TYPE format_type AS ENUM ('Qcow2');
         </sql>
 
         <createTable tableName="image_format">
@@ -80,7 +80,7 @@
             <column name="type" type="format_type">
                 <constraints nullable="false" />
             </column>
-            <column name="url" type="varchar(255)">
+            <column name="uri" type="varchar(255)">
                 <constraints nullable="false" />
             </column>
             <column name="sha512" type="varchar(128)">

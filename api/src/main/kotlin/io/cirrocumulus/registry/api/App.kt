@@ -1,11 +1,9 @@
 package io.cirrocumulus.registry.api
 
 import io.cirrocumulus.registry.api.v1.image
-import io.cirrocumulus.registry.dto.InvalidFileContentTypeErrorDto
-import io.cirrocumulus.registry.dto.InvalidFileFormatErrorDto
-import io.cirrocumulus.registry.dto.InvalidRequestContentTypeErrorDto
-import io.cirrocumulus.registry.dto.MissingParameterErrorDto
+import io.cirrocumulus.registry.dto.*
 import io.ktor.application.Application
+import io.ktor.application.ApplicationCall
 import io.ktor.application.call
 import io.ktor.application.install
 import io.ktor.auth.Authentication
@@ -13,6 +11,7 @@ import io.ktor.auth.UserIdPrincipal
 import io.ktor.auth.basic
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.StatusPages
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.jackson.jackson
 import io.ktor.response.respond
@@ -22,14 +21,12 @@ import io.ktor.server.netty.Netty
 import io.r2dbc.client.R2dbc
 
 fun main(args: Array<String>) {
-    val dbClient = Configuration.Database(
-        username = "cirrocumulus_registry",
-        password = "cirrocumulus_registry"
-    ).createClient()
-    embeddedServer(Netty, 8080) { module(dbClient) }.start(true)
+    val config = Configuration()
+    val dbClient = config.db.createClient()
+    embeddedServer(Netty, 8080) { module(dbClient, config) }.start(true)
 }
 
-fun Application.module(dbClient: R2dbc) {
+fun Application.module(dbClient: R2dbc, config: Configuration) {
     val imageRepository = ImageR2dbcRepository(dbClient)
     val userRepository = UserR2dbcRepository(dbClient)
 
@@ -50,13 +47,13 @@ fun Application.module(dbClient: R2dbc) {
 
     install(StatusPages) {
         exception<InvalidRequestException> { exception ->
-            val dto = when (exception) {
-                is InvalidFileContentTypeException -> exception.toDto()
-                is InvalidFileFormatException -> exception.toDto()
-                is InvalidRequestContentTypeException -> exception.toDto()
-                is MissingParameterException -> exception.toDto()
+            when (exception) {
+                is ImageFormatAlreadyExistsException -> exception.send(call, config)
+                is InvalidFileContentTypeException -> exception.send(call)
+                is InvalidFileFormatException -> exception.send(call)
+                is InvalidRequestContentTypeException -> exception.send(call)
+                is MissingParameterException -> exception.send(call)
             }
-            call.respond(HttpStatusCode.BadRequest, dto)
         }
     }
 
@@ -65,15 +62,27 @@ fun Application.module(dbClient: R2dbc) {
     }
 }
 
-private fun InvalidFileContentTypeException.toDto() = InvalidFileContentTypeErrorDto(
-    parameter,
-    allowedContentTypes.map { it.toString() }.toSet()
-)
+private suspend fun ImageFormatAlreadyExistsException.send(call: ApplicationCall, config: Configuration) {
+    call.response.headers.append(HttpHeaders.Location, "${config.registry.baseUrl}/${imageFormat.uri}")
+    call.respond(HttpStatusCode.Conflict, ImageFormatAlreadyExistsErrorDto)
+}
 
-private fun InvalidFileFormatException.toDto() = InvalidFileFormatErrorDto(parameter, allowedFileFormats)
+private suspend fun InvalidFileContentTypeException.send(call: ApplicationCall) {
+    val dto = InvalidFileContentTypeErrorDto(parameter, allowedContentTypes.map { it.toString() }.toSet())
+    call.respond(HttpStatusCode.BadRequest, dto)
+}
 
-private fun InvalidRequestContentTypeException.toDto() = InvalidRequestContentTypeErrorDto(
-    expectedContentType.toString()
-)
+private suspend fun InvalidFileFormatException.send(call: ApplicationCall) {
+    val dto = InvalidFileFormatErrorDto(parameter, allowedFileFormats)
+    call.respond(HttpStatusCode.BadRequest, dto)
+}
 
-private fun MissingParameterException.toDto() = MissingParameterErrorDto(parameter)
+private suspend fun InvalidRequestContentTypeException.send(call: ApplicationCall) {
+    val dto = InvalidRequestContentTypeErrorDto(expectedContentType.toString())
+    call.respond(HttpStatusCode.BadRequest, dto)
+}
+
+private suspend fun MissingParameterException.send(call: ApplicationCall) {
+    val dto = MissingParameterErrorDto(parameter)
+    call.respond(HttpStatusCode.BadRequest, dto)
+}

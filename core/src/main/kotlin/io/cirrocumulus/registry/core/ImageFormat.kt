@@ -1,19 +1,18 @@
 package io.cirrocumulus.registry.core
 
 import java.net.URI
-import java.time.ZonedDateTime
+import java.time.OffsetDateTime
 import java.util.*
 
 data class ImageFormat(
     val id: UUID = UUID.randomUUID(),
+    val version: ImageVersion,
     val type: Type,
-    val url: URI,
+    val uri: URI,
     val sha512: String,
-    val creationDate: ZonedDateTime
+    val creationDate: OffsetDateTime
 ) {
     enum class Type {
         Qcow2;
-
-        override fun toString() = name.toLowerCase()
     }
 }

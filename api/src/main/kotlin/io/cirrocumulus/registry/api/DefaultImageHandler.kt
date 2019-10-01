@@ -20,7 +20,7 @@ class DefaultImageHandler(
     ): ImageFormat {
         val imageFileExtension = File(imageOriginalFilename).extension
         val formatType = imageFileExtension.toFormatType()
-        val imageFormat = imageRepository.find(group, name, version, formatType)
+        val imageFormat = imageRepository.findFormat(group, name, version, formatType)
         if (imageFormat != null) {
             throw ImageFormatAlreadyExistsException(imageFormat)
         }

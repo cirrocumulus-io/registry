@@ -35,7 +35,25 @@ class ImageR2dbcRepository(
         const val FormatCreationDateColumn = "creation_date"
     }
 
-    override suspend fun find(
+    override suspend fun find(group: String, name: String): Image? = dbClient
+        .inTransaction { handle ->
+            handle
+                .select(
+                    """
+                    SELECT *
+                    FROM $ImageTable
+                    WHERE "$ImageGroupColumn" = $1
+                        AND $ImageNameColumn = $2
+                    """.trimIndent()
+                )
+                .bind("$1", group)
+                .bind("$2", name)
+                .mapRow { row, _ -> row.toImage() }
+                .singleOrEmpty()
+        }
+        .awaitFirstOrNull()
+
+    override suspend fun findFormat(
         group: String,
         name: String,
         version: String,
@@ -76,6 +94,34 @@ class ImageR2dbcRepository(
         }
         .awaitFirstOrNull()
 
+    override suspend fun findVersion(group: String, name: String, version: String): ImageVersion? = dbClient
+        .inTransaction { handle ->
+            handle
+                .select(
+                    """
+                    SELECT
+                        i.$ImageIdColumn AS i_$ImageIdColumn,
+                        i.$ImageOwnerIdColumn AS i_$ImageOwnerIdColumn,
+                        i.$ImageGroupColumn AS i_$ImageGroupColumn,
+                        i.$ImageNameColumn AS i_$ImageNameColumn,
+                        i.$ImageCreationDateColumn AS i_$ImageCreationDateColumn,
+                        v.$VersionIdColumn AS v_$VersionIdColumn,
+                        v.$VersionNameColumn AS v_$VersionNameColumn
+                    FROM $ImageTable i
+                    JOIN $VersionTable v ON (v.$VersionImageIdColumn = i.$ImageIdColumn)
+                    WHERE i.$ImageGroupColumn = $1
+                        AND i.$ImageNameColumn = $2
+                        AND v.$VersionNameColumn = $3
+                    """.trimIndent()
+                )
+                .bind("$1", group)
+                .bind("$2", name)
+                .bind("$3", version)
+                .mapRow { row, _ -> row.toImageVersion("v", "i") }
+                .singleOrEmpty()
+        }
+        .awaitFirstOrNull()
+
     private fun Row.toImage(alias: String = ""): Image = Image(
         id = get(alias.columnName(ImageIdColumn), UUID::class.java)!!,
         ownerId = get(alias.columnName(ImageOwnerIdColumn), UUID::class.java)!!,
@@ -99,5 +145,6 @@ class ImageR2dbcRepository(
         name = get(alias.columnName(VersionNameColumn), String::class.java)!!
     )
 
-    private fun String.columnName(columnName: String = ""): String = "${this}_$columnName"
+    private fun String.columnName(columnName: String = ""): String =
+        if (isEmpty()) columnName else "${this}_$columnName"
 }

@@ -24,7 +24,37 @@ class ImageR2dbcRepositoryTest {
     inner class find {
         @Test
         fun `should return null if group does not exist`() = runBlocking {
-            val imageFormat = repository.find(
+            val image = repository.find(
+                "${Image1_1.group}1",
+                Image1_1.name
+            )
+            image.shouldBeNull()
+        }
+
+        @Test
+        fun `should return null if name does not exist`() = runBlocking {
+            val image = repository.find(
+                Image1_1.group,
+                "${Image1_1.name}1"
+            )
+            image.shouldBeNull()
+        }
+
+        @Test
+        fun `should return image if it exists`() = runBlocking {
+            val image = repository.find(
+                Image1_1.group,
+                Image1_1.name
+            )
+            image.atUtc() shouldBe Image1_1.atUtc()
+        }
+    }
+
+    @Nested
+    inner class findFormat {
+        @Test
+        fun `should return null if group does not exist`() = runBlocking {
+            val imageFormat = repository.findFormat(
                 "${Image1_1.group}1",
                 Image1_1.name,
                 ImageVersion1_1.name,
@@ -35,7 +65,7 @@ class ImageR2dbcRepositoryTest {
 
         @Test
         fun `should return null if name does not exist`() = runBlocking {
-            val imageFormat = repository.find(
+            val imageFormat = repository.findFormat(
                 Image1_1.group,
                 "${Image1_1.name}1",
                 ImageVersion1_1.name,
@@ -46,7 +76,7 @@ class ImageR2dbcRepositoryTest {
 
         @Test
         fun `should return null if version does not exist`() = runBlocking {
-            val imageFormat = repository.find(
+            val imageFormat = repository.findFormat(
                 Image1_1.group,
                 Image1_1.name,
                 "${ImageVersion1_1.name}1",
@@ -59,7 +89,7 @@ class ImageR2dbcRepositoryTest {
 
         @Test
         fun `should return image format if it exists`() = runBlocking {
-            val imageFormat = repository.find(
+            val imageFormat = repository.findFormat(
                 Image1_1.group,
                 Image1_1.name,
                 ImageVersion1_1.name,
@@ -67,14 +97,57 @@ class ImageR2dbcRepositoryTest {
             )
             imageFormat.atUtc() shouldBe ImageFormat1_1.atUtc()
         }
-
-        fun Image?.atUtc() = this?.copy(creationDate = creationDate.withOffsetSameInstant(ZoneOffset.UTC))
-
-        fun ImageFormat?.atUtc() = this?.copy(
-            version = version.atUtc()!!,
-            creationDate = creationDate.withOffsetSameInstant(ZoneOffset.UTC)
-        )
-
-        fun ImageVersion?.atUtc() = this?.copy(image = image.atUtc()!!)
     }
+
+    @Nested
+    inner class findVersion {
+        @Test
+        fun `should return null if group does not exist`() = runBlocking {
+            val imageVersion = repository.findVersion(
+                "${Image1_1.group}1",
+                Image1_1.name,
+                ImageVersion1_1.name
+            )
+            imageVersion.shouldBeNull()
+        }
+
+        @Test
+        fun `should return null if name does not exist`() = runBlocking {
+            val imageVersion = repository.findVersion(
+                Image1_1.group,
+                "${Image1_1.name}1",
+                ImageVersion1_1.name
+            )
+            imageVersion.shouldBeNull()
+        }
+
+        @Test
+        fun `should return null if version does not exist`() = runBlocking {
+            val imageVersion = repository.findVersion(
+                Image1_1.group,
+                Image1_1.name,
+                "${ImageVersion1_1.name}1"
+            )
+            imageVersion.shouldBeNull()
+        }
+
+        @Test
+        fun `should return image version if it exists`() = runBlocking {
+            val imageVersion = repository.findVersion(
+                Image1_1.group,
+                Image1_1.name,
+                ImageVersion1_1.name
+            )
+            imageVersion.atUtc() shouldBe ImageVersion1_1.atUtc()
+        }
+    }
+
+    fun Image?.atUtc() = this?.copy(creationDate = creationDate.withOffsetSameInstant(ZoneOffset.UTC))
+
+    fun ImageFormat?.atUtc() = this?.copy(
+        version = version.atUtc()!!,
+        creationDate = creationDate.withOffsetSameInstant(ZoneOffset.UTC)
+    )
+
+    fun ImageVersion?.atUtc() = this?.copy(image = image.atUtc()!!)
 }

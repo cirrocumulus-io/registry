@@ -13,14 +13,20 @@ class UserR2dbcRepository(
     internal companion object {
         const val IdColumnName = "id"
         const val PasswordColumnName = "password"
-        const val UserTable = "\"user\""
+        const val UserTable = "user"
         const val UsernameColumnName = "username"
     }
 
     override suspend fun findByCredentials(username: String, password: String): User? = dbClient
         .inTransaction { handle ->
             handle
-                .select("SELECT * FROM $UserTable WHERE $UsernameColumnName = $1")
+                .select(
+                    """
+                        SELECT * 
+                        FROM "$UserTable" 
+                        WHERE $UsernameColumnName = $1
+                    """.trimIndent()
+                )
                 .bind("$1", username)
                 .mapRow { row, _ -> row.toUser() }
                 .singleOrEmpty()

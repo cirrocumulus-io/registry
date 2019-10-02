@@ -7,7 +7,6 @@ import io.ktor.application.ApplicationCall
 import io.ktor.application.call
 import io.ktor.application.install
 import io.ktor.auth.Authentication
-import io.ktor.auth.UserIdPrincipal
 import io.ktor.auth.basic
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.StatusPages
@@ -36,7 +35,7 @@ fun Application.module(dbClient: R2dbc, config: Configuration) {
             validate { (name1, password) ->
                 userRepository
                     .findByCredentials(name1, password)
-                    ?.let { UserIdPrincipal(it.username) }
+                    ?.let { UserPrincipal(it.id, it.username) }
             }
         }
     }

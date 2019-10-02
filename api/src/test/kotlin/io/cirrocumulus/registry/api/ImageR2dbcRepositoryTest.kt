@@ -9,6 +9,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import java.net.URI
 import java.time.ZoneOffset
 
 @Suppress("ClassName")
@@ -18,6 +19,48 @@ class ImageR2dbcRepositoryTest {
     @BeforeEach
     fun beforeEach() {
         repository = ImageR2dbcRepository(DbClient)
+    }
+
+    @Nested
+    inner class create {
+        val image = Image(
+            ownerId = User1.id,
+            group = User1.username,
+            name = "fedora"
+        )
+
+        @Test
+        fun `should insert image`() = runBlocking {
+            repository.create(image) shouldBe image
+        }
+    }
+
+    @Nested
+    inner class createFormat {
+        val format = ImageFormat(
+            version = ImageVersion1_1,
+            type = ImageFormat.Type.Qcow2,
+            uri = URI("/v1/user1/fedora/30/qcow2"),
+            sha512 = "8f14ceb5224148cd03648aed62803ef9b1155062d1f685b3945f22e9298e8bdfa68d3372864b6b0dcc205e3e2da7befb439dfdd3c245ce9f20726936a612664d"
+        )
+
+        @Test
+        fun `should insert image format`() = runBlocking {
+            repository.createFormat(format) shouldBe format
+        }
+    }
+
+    @Nested
+    inner class createVersion {
+        val version = ImageVersion(
+            image = Image1_1,
+            name = "30"
+        )
+
+        @Test
+        fun `should insert image version`() = runBlocking {
+            repository.createVersion(version) shouldBe version
+        }
     }
 
     @Nested

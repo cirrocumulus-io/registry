@@ -3,7 +3,6 @@ package io.cirrocumulus.registry.api.v1
 import io.cirrocumulus.registry.api.*
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
-import io.ktor.auth.UserIdPrincipal
 import io.ktor.auth.authenticate
 import io.ktor.auth.principal
 import io.ktor.http.ContentType
@@ -31,11 +30,18 @@ fun Routing.image(imageRepository: ImageRepository): Route = route("/v1") {
 
     authenticate("user") {
         post("/{name}/{version}") {
-            val group = call.principal<UserIdPrincipal>()!!.name
+            val principal = call.principal<UserPrincipal>()!!
             val name = call.parameters[NamePathParameter]!!
             val version = call.parameters[VersionPathParameter]!!
             val part = findFilePart()
-            handler.handleUpload(group, name, version, part.originalFileName!!, part.streamProvider())
+            handler.handleUpload(
+                principal.id,
+                principal.username,
+                name,
+                version,
+                part.originalFileName!!,
+                part.streamProvider()
+            )
         }
     }
 }

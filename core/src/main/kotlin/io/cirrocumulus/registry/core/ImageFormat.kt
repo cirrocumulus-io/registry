@@ -10,9 +10,9 @@ data class ImageFormat(
     val type: Type,
     val uri: URI,
     val sha512: String,
-    val creationDate: OffsetDateTime
+    val creationDate: OffsetDateTime = OffsetDateTime.now()
 ) {
     enum class Type {
-        Qcow2;
+        Qcow2
     }
 }

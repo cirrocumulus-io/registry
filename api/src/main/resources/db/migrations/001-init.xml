@@ -67,7 +67,7 @@
                                  onDelete="CASCADE" />
 
         <sql>
-            CREATE TYPE format_type AS ENUM ('Qcow2');
+            CREATE TYPE format_type AS ENUM ('qcow2');
         </sql>
 
         <createTable tableName="image_format">

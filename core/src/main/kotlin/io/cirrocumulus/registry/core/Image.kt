@@ -4,9 +4,9 @@ import java.time.OffsetDateTime
 import java.util.*
 
 data class Image(
-    val id: UUID,
+    val id: UUID = UUID.randomUUID(),
     val ownerId: UUID,
     val group: String,
     val name: String,
-    val creationDate: OffsetDateTime
+    val creationDate: OffsetDateTime = OffsetDateTime.now()
 )

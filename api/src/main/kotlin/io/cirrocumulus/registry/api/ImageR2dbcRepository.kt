@@ -5,7 +5,9 @@ import io.cirrocumulus.registry.core.ImageFormat
 import io.cirrocumulus.registry.core.ImageVersion
 import io.r2dbc.client.R2dbc
 import io.r2dbc.spi.Row
+import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitFirstOrNull
+import kotlinx.coroutines.reactive.awaitSingle
 import java.net.URI
 import java.time.OffsetDateTime
 import java.util.*
@@ -34,6 +36,60 @@ class ImageR2dbcRepository(
         const val FormatSha512Column = "sha512"
         const val FormatCreationDateColumn = "creation_date"
     }
+
+    override suspend fun create(image: Image): Image = dbClient
+        .inTransaction { handle ->
+            handle
+                .createUpdate(
+                    """
+                    INSERT INTO $ImageTable
+                    VALUES ($1, $2, $3, $4, $5)
+                    """.trimIndent()
+                )
+                .bind("$1", image.id)
+                .bind("$2", image.ownerId)
+                .bind("$3", image.group)
+                .bind("$4", image.name)
+                .bind("$5", image.creationDate)
+                .execute()
+                .map { image }
+        }
+        .awaitSingle()
+
+    override suspend fun createFormat(format: ImageFormat): ImageFormat = dbClient
+        .inTransaction { handle ->
+            handle
+                .execute(
+                    """
+                    INSERT INTO $FormatTable
+                    VALUES ($1, $2, $3::format_type, $4, $5, $6)
+                    """.trimIndent(),
+                    format.id,
+                    format.version.id,
+                    format.type.toSql(),
+                    format.uri,
+                    format.sha512,
+                    format.creationDate
+                )
+                .map { format }
+        }
+        .awaitFirst()
+
+    override suspend fun createVersion(version: ImageVersion): ImageVersion = dbClient
+        .inTransaction { handle ->
+            handle
+                .execute(
+                    """
+                    INSERT INTO $VersionTable
+                    VALUES ($1, $2, $3)
+                    """.trimIndent(),
+                    version.id,
+                    version.image.id,
+                    version.name
+                )
+                .map { version }
+        }
+        .awaitSingle()
 
     override suspend fun find(group: String, name: String): Image? = dbClient
         .inTransaction { handle ->
@@ -88,7 +144,7 @@ class ImageR2dbcRepository(
                 .bind("$1", group)
                 .bind("$2", name)
                 .bind("$3", version)
-                .bind("$4", formatType.toString())
+                .bind("$4", formatType.toSql())
                 .mapRow { row, _ -> row.toImageFormat("f", "v", "i") }
                 .singleOrEmpty()
         }
@@ -122,6 +178,8 @@ class ImageR2dbcRepository(
         }
         .awaitFirstOrNull()
 
+    private fun ImageFormat.Type.toSql() = name.toLowerCase()
+
     private fun Row.toImage(alias: String = ""): Image = Image(
         id = get(alias.columnName(ImageIdColumn), UUID::class.java)!!,
         ownerId = get(alias.columnName(ImageOwnerIdColumn), UUID::class.java)!!,
@@ -133,7 +191,7 @@ class ImageR2dbcRepository(
     private fun Row.toImageFormat(alias: String, versionAlias: String, imageAlias: String): ImageFormat = ImageFormat(
         id = get(alias.columnName(FormatIdColumn), UUID::class.java)!!,
         version = toImageVersion(versionAlias, imageAlias),
-        type = ImageFormat.Type.valueOf(get(alias.columnName(FormatTypeColumn), String::class.java)!!),
+        type = get(alias.columnName(FormatTypeColumn), String::class.java)!!.toImageFormatType(),
         uri = URI(get(alias.columnName(FormatUriColumn), String::class.java)!!),
         sha512 = get(alias.columnName(FormatSha512Column), String::class.java)!!,
         creationDate = get(alias.columnName(FormatCreationDateColumn), OffsetDateTime::class.java)!!
@@ -147,4 +205,8 @@ class ImageR2dbcRepository(
 
     private fun String.columnName(columnName: String = ""): String =
         if (isEmpty()) columnName else "${this}_$columnName"
+
+    private fun String.toImageFormatType() = ImageFormat.Type
+        .values().firstOrNull { it.toSql() == this }
+        ?: throw UnsupportedFormatException("$this is not a supported format")
 }

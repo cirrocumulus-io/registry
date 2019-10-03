@@ -9,7 +9,7 @@ import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import java.net.URI
-import java.time.OffsetDateTime
+import java.time.ZonedDateTime
 import java.util.*
 
 class ImageR2dbcRepository(
@@ -112,7 +112,7 @@ class ImageR2dbcRepository(
     override suspend fun findFormat(
         group: String,
         name: String,
-        version: String,
+        versionName: String,
         formatType: ImageFormat.Type
     ): ImageFormat? = dbClient
         .inTransaction { handle ->
@@ -143,14 +143,14 @@ class ImageR2dbcRepository(
                 )
                 .bind("$1", group)
                 .bind("$2", name)
-                .bind("$3", version)
+                .bind("$3", versionName)
                 .bind("$4", formatType.toSql())
                 .mapRow { row, _ -> row.toImageFormat("f", "v", "i") }
                 .singleOrEmpty()
         }
         .awaitFirstOrNull()
 
-    override suspend fun findVersion(group: String, name: String, version: String): ImageVersion? = dbClient
+    override suspend fun findVersion(group: String, name: String, versionName: String): ImageVersion? = dbClient
         .inTransaction { handle ->
             handle
                 .select(
@@ -172,7 +172,7 @@ class ImageR2dbcRepository(
                 )
                 .bind("$1", group)
                 .bind("$2", name)
-                .bind("$3", version)
+                .bind("$3", versionName)
                 .mapRow { row, _ -> row.toImageVersion("v", "i") }
                 .singleOrEmpty()
         }
@@ -185,7 +185,7 @@ class ImageR2dbcRepository(
         ownerId = get(alias.columnName(ImageOwnerIdColumn), UUID::class.java)!!,
         group = get(alias.columnName(ImageGroupColumn), String::class.java)!!,
         name = get(alias.columnName(ImageNameColumn), String::class.java)!!,
-        creationDate = get(alias.columnName(ImageCreationDateColumn), OffsetDateTime::class.java)!!
+        creationDate = get(alias.columnName(ImageCreationDateColumn), ZonedDateTime::class.java)!!
     )
 
     private fun Row.toImageFormat(alias: String, versionAlias: String, imageAlias: String): ImageFormat = ImageFormat(
@@ -194,7 +194,7 @@ class ImageR2dbcRepository(
         type = get(alias.columnName(FormatTypeColumn), String::class.java)!!.toImageFormatType(),
         uri = URI(get(alias.columnName(FormatUriColumn), String::class.java)!!),
         sha512 = get(alias.columnName(FormatSha512Column), String::class.java)!!,
-        creationDate = get(alias.columnName(FormatCreationDateColumn), OffsetDateTime::class.java)!!
+        creationDate = get(alias.columnName(FormatCreationDateColumn), ZonedDateTime::class.java)!!
     )
 
     private fun Row.toImageVersion(alias: String, imageAlias: String): ImageVersion = ImageVersion(

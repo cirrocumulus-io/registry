@@ -1,7 +1,7 @@
 package io.cirrocumulus.registry.core
 
 import java.net.URI
-import java.time.OffsetDateTime
+import java.time.ZonedDateTime
 import java.util.*
 
 data class ImageFormat(
@@ -10,11 +10,17 @@ data class ImageFormat(
     val type: Type,
     val uri: URI,
     val sha512: String,
-    val creationDate: OffsetDateTime = OffsetDateTime.now()
+    val creationDate: ZonedDateTime = ZonedDateTime.now()
 ) {
     enum class Type(
         val fileExtension: String
     ) {
         Qcow2("qcow2")
     }
+
+    val image get() = version.image
+    val imageGroup get() = version.imageGroup
+    val imageName get() = version.imageName
+    val ownerId get() = image.ownerId
+    val versionName get() = version.name
 }

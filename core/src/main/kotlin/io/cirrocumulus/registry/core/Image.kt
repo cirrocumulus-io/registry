@@ -1,6 +1,6 @@
 package io.cirrocumulus.registry.core
 
-import java.time.OffsetDateTime
+import java.time.ZonedDateTime
 import java.util.*
 
 data class Image(
@@ -8,5 +8,5 @@ data class Image(
     val ownerId: UUID,
     val group: String,
     val name: String,
-    val creationDate: OffsetDateTime = OffsetDateTime.now()
+    val creationDate: ZonedDateTime = ZonedDateTime.now()
 )

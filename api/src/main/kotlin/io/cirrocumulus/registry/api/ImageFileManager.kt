@@ -8,8 +8,8 @@ interface ImageFileManager {
     suspend fun write(
         group: String,
         name: String,
-        version: String,
+        versionName: String,
         formatType: ImageFormat.Type,
-        imageFileInput: InputStream
+        fileInput: InputStream
     ): File
 }

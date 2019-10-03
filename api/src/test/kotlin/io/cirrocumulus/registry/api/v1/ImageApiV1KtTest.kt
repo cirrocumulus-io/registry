@@ -66,7 +66,7 @@ class ImageApiV1KtTest {
         fun `bad request when no file parameter value`() = withTestApplication({ module(DbClient, Config) }) {
             val request = handleRequest(HttpMethod.Post, "/v1/debian/9.0") {
                 addHeader(HttpHeaders.Authorization, User1.basicAuthentication())
-                fillBodyWithTestFile(ContentType.Application.OctetStream, "parameter", "test.qcow2")
+                fillBodyWithTestFile(ContentType.Application.OctetStream, "parameter", Qcow2ImageFile.name)
             }
             with(request) {
                 response.status() shouldBe HttpStatusCode.BadRequest
@@ -82,7 +82,7 @@ class ImageApiV1KtTest {
         fun `bad request when wrong file content type`() = withTestApplication({ module(DbClient, Config) }) {
             val request = handleRequest(HttpMethod.Post, "/v1/debian/9.0") {
                 addHeader(HttpHeaders.Authorization, User1.basicAuthentication())
-                fillBodyWithTestFile(ContentType.Application.Json, "file", "test.qcow2")
+                fillBodyWithTestFile(ContentType.Application.Json, "file", Qcow2ImageFile.name)
             }
             with(request) {
                 response.status() shouldBe HttpStatusCode.BadRequest
@@ -117,7 +117,7 @@ class ImageApiV1KtTest {
         fun `conflict when image format already exists`() = withTestApplication({ module(DbClient, Config) }) {
             val request = handleRequest(HttpMethod.Post, "/v1/debian/9.0") {
                 addHeader(HttpHeaders.Authorization, User1.basicAuthentication())
-                fillBodyWithTestFile(ContentType.Application.OctetStream, "file", "test.qcow2")
+                fillBodyWithTestFile(ContentType.Application.OctetStream, "file", Qcow2ImageFile.name)
             }
             with(request) {
                 response.status() shouldBe HttpStatusCode.Conflict
@@ -129,6 +129,22 @@ class ImageApiV1KtTest {
                     body.shouldNotBeNull()
                     mapper.readValue<ErrorDto>(body) shouldBe dto
                 }
+            }
+        }
+
+        @Test
+        fun `created when image format is created`() = withTestApplication({ module(DbClient, Config) }) {
+            val request = handleRequest(HttpMethod.Post, "/v1/fedora/30") {
+                addHeader(HttpHeaders.Authorization, User1.basicAuthentication())
+                fillBodyWithTestFile(ContentType.Application.OctetStream, "file", Qcow2ImageFile.name)
+            }
+            with(request) {
+                response.status() shouldBe HttpStatusCode.Created
+                response.headers.should { headers ->
+                    val location = "${Config.registry.baseUrl}/v1/${User1.username}/fedora/30/qcow2"
+                    headers[HttpHeaders.Location] shouldBe location
+                }
+                response.content.shouldBeNull()
             }
         }
 
@@ -146,7 +162,7 @@ class ImageApiV1KtTest {
                 boundary,
                 listOf(
                     PartData.FileItem(
-                        { javaClass.getResourceAsStream("/test.qcow2").asInput() },
+                        { Qcow2ImageFile.inputStream().asInput() },
                         {},
                         headersOf(
                             Pair(

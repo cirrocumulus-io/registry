@@ -6,12 +6,15 @@ import io.ktor.application.call
 import io.ktor.auth.authenticate
 import io.ktor.auth.principal
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
 import io.ktor.http.content.readAllParts
 import io.ktor.http.content.streamProvider
 import io.ktor.request.isMultipart
 import io.ktor.request.receiveMultipart
-import io.ktor.routing.Route
+import io.ktor.response.header
+import io.ktor.response.respond
 import io.ktor.routing.Routing
 import io.ktor.routing.post
 import io.ktor.routing.route
@@ -25,26 +28,29 @@ const val FileParameter = "file"
 const val NamePathParameter = "name"
 const val VersionPathParameter = "version"
 
-fun Routing.image(imageRepository: ImageRepository, imageFileManager: ImageFileManager): Route = route("/v1") {
-    val handler = DefaultImageHandler(imageRepository, imageFileManager)
+fun Routing.imageApiV1(imageRepository: ImageRepository, imageFileManager: ImageFileManager, config: Configuration) =
+    route("/v1") {
+        val handler = DefaultImageHandler(imageRepository, imageFileManager)
 
-    authenticate("user") {
-        post("/{name}/{version}") {
-            val principal = call.principal<UserPrincipal>()!!
-            val name = call.parameters[NamePathParameter]!!
-            val version = call.parameters[VersionPathParameter]!!
-            val part = findFilePart()
-            handler.handleUpload(
-                principal.id,
-                principal.username,
-                name,
-                version,
-                part.originalFileName!!,
-                part.streamProvider()
-            )
+        authenticate("user") {
+            post("/{name}/{version}") {
+                val principal = call.principal<UserPrincipal>()!!
+                val name = call.parameters[NamePathParameter]!!
+                val versionName = call.parameters[VersionPathParameter]!!
+                val part = findFilePart()
+                val format = handler.handleUpload(
+                    principal.id,
+                    principal.username,
+                    name,
+                    versionName,
+                    part.originalFileName!!,
+                    part.streamProvider()
+                )
+                call.response.header(HttpHeaders.Location, "${config.registry.baseUrl}${format.uri}")
+                call.respond(HttpStatusCode.Created)
+            }
         }
     }
-}
 
 private suspend fun PipelineContext<Unit, ApplicationCall>.findFilePart(): PartData.FileItem {
     if (!call.request.isMultipart()) {

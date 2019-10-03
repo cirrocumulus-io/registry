@@ -23,20 +23,20 @@ class FilesystemImageFileManagerTest {
     inner class write {
         @Test
         fun `should write input stream to file`() = runBlocking {
-            val imageFormat = ImageFormat1_1
+            val format = ImageFormat1_1
             val file = fileManager.write(
-                imageFormat.version.image.group,
-                imageFormat.version.image.name,
-                imageFormat.version.name,
-                imageFormat.type,
-                javaClass.getResourceAsStream("/test.qcow2")
+                format.imageGroup,
+                format.imageName,
+                format.versionName,
+                format.type,
+                Qcow2ImageFile.inputStream()
             )
-            file shouldHaveParent imageFormat.version.name
+            file shouldHaveParent format.versionName
             file.parentFile should { parent ->
-                parent shouldHaveParent imageFormat.version.image.name
+                parent shouldHaveParent format.imageName
                 parent.parentFile shouldHaveParent config.registry.imagesDir.name
             }
-            file.readBytes() shouldBe javaClass.getResourceAsStream("/test.qcow2").readBytes()
+            file.readBytes() shouldBe Qcow2ImageFile.inputStream().readBytes()
         }
     }
 }

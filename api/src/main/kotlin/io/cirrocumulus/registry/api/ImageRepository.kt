@@ -13,7 +13,7 @@ interface ImageRepository {
 
     suspend fun find(group: String, name: String): Image?
 
-    suspend fun findFormat(group: String, name: String, version: String, formatType: ImageFormat.Type): ImageFormat?
+    suspend fun findFormat(group: String, name: String, versionName: String, formatType: ImageFormat.Type): ImageFormat?
 
-    suspend fun findVersion(group: String, name: String, version: String): ImageVersion?
+    suspend fun findVersion(group: String, name: String, versionName: String): ImageVersion?
 }

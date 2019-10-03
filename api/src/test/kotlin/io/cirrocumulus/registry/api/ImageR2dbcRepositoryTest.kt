@@ -97,48 +97,48 @@ class ImageR2dbcRepositoryTest {
     inner class findFormat {
         @Test
         fun `should return null if group does not exist`() = runBlocking {
-            val imageFormat = repository.findFormat(
+            val format = repository.findFormat(
                 "${Image1_1.group}1",
                 Image1_1.name,
                 ImageVersion1_1.name,
                 ImageFormat1_1.type
             )
-            imageFormat.shouldBeNull()
+            format.shouldBeNull()
         }
 
         @Test
         fun `should return null if name does not exist`() = runBlocking {
-            val imageFormat = repository.findFormat(
+            val format = repository.findFormat(
                 Image1_1.group,
                 "${Image1_1.name}1",
                 ImageVersion1_1.name,
                 ImageFormat1_1.type
             )
-            imageFormat.shouldBeNull()
+            format.shouldBeNull()
         }
 
         @Test
         fun `should return null if version does not exist`() = runBlocking {
-            val imageFormat = repository.findFormat(
+            val format = repository.findFormat(
                 Image1_1.group,
                 Image1_1.name,
                 "${ImageVersion1_1.name}1",
                 ImageFormat1_1.type
             )
-            imageFormat.shouldBeNull()
+            format.shouldBeNull()
         }
 
         // TODO: Add test when format does not exist when many format will be supported
 
         @Test
         fun `should return image format if it exists`() = runBlocking {
-            val imageFormat = repository.findFormat(
+            val format = repository.findFormat(
                 Image1_1.group,
                 Image1_1.name,
                 ImageVersion1_1.name,
                 ImageFormat1_1.type
             )
-            imageFormat.atUtc() shouldBe ImageFormat1_1.atUtc()
+            format.atUtc() shouldBe ImageFormat1_1.atUtc()
         }
     }
 
@@ -146,50 +146,50 @@ class ImageR2dbcRepositoryTest {
     inner class findVersion {
         @Test
         fun `should return null if group does not exist`() = runBlocking {
-            val imageVersion = repository.findVersion(
+            val version = repository.findVersion(
                 "${Image1_1.group}1",
                 Image1_1.name,
                 ImageVersion1_1.name
             )
-            imageVersion.shouldBeNull()
+            version.shouldBeNull()
         }
 
         @Test
         fun `should return null if name does not exist`() = runBlocking {
-            val imageVersion = repository.findVersion(
+            val version = repository.findVersion(
                 Image1_1.group,
                 "${Image1_1.name}1",
                 ImageVersion1_1.name
             )
-            imageVersion.shouldBeNull()
+            version.shouldBeNull()
         }
 
         @Test
         fun `should return null if version does not exist`() = runBlocking {
-            val imageVersion = repository.findVersion(
+            val version = repository.findVersion(
                 Image1_1.group,
                 Image1_1.name,
                 "${ImageVersion1_1.name}1"
             )
-            imageVersion.shouldBeNull()
+            version.shouldBeNull()
         }
 
         @Test
         fun `should return image version if it exists`() = runBlocking {
-            val imageVersion = repository.findVersion(
+            val version = repository.findVersion(
                 Image1_1.group,
                 Image1_1.name,
                 ImageVersion1_1.name
             )
-            imageVersion.atUtc() shouldBe ImageVersion1_1.atUtc()
+            version.atUtc() shouldBe ImageVersion1_1.atUtc()
         }
     }
 
-    fun Image?.atUtc() = this?.copy(creationDate = creationDate.withOffsetSameInstant(ZoneOffset.UTC))
+    fun Image?.atUtc() = this?.copy(creationDate = creationDate.withZoneSameInstant(ZoneOffset.UTC))
 
     fun ImageFormat?.atUtc() = this?.copy(
         version = version.atUtc()!!,
-        creationDate = creationDate.withOffsetSameInstant(ZoneOffset.UTC)
+        creationDate = creationDate.withZoneSameInstant(ZoneOffset.UTC)
     )
 
     fun ImageVersion?.atUtc() = this?.copy(image = image.atUtc()!!)

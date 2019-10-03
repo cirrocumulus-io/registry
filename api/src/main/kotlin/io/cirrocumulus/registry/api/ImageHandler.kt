@@ -9,7 +9,7 @@ interface ImageHandler {
         userId: UUID,
         group: String,
         name: String,
-        version: String,
+        versionName: String,
         imageOriginalFilename: String,
         imageFileInput: InputStream
     ): ImageFormat

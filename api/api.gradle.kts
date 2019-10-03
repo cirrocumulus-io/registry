@@ -28,6 +28,8 @@ dependencies {
     implementation(project(":cirrocumulus-registry-core"))
     implementation(project(":cirrocumulus-registry-dto"))
 
+    implementation("commons-codec:commons-codec:1.13")
+
     val coroutinesVersion = "1.3.2"
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutinesVersion")
@@ -56,6 +58,8 @@ dependencies {
 
     liquibaseRuntime("org.liquibase:liquibase-core:3.8.0")
     liquibaseRuntime("org.postgresql:postgresql:42.2.8")
+
+    testImplementation("io.mockk:mockk:1.9.3")
 
     runtime("ch.qos.logback:logback-classic:1.2.3")
 

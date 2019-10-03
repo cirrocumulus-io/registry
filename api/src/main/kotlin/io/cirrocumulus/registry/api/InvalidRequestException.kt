@@ -10,7 +10,7 @@ sealed class InvalidParameterException : InvalidRequestException() {
 }
 
 data class ImageFormatAlreadyExistsException(
-    val imageFormat: ImageFormat
+    val format: ImageFormat
 ) : InvalidRequestException()
 
 class InvalidFileContentTypeException(

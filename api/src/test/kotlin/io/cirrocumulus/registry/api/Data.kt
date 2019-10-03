@@ -6,9 +6,10 @@ import io.cirrocumulus.registry.core.ImageVersion
 import io.cirrocumulus.registry.core.User
 import io.ktor.util.InternalAPI
 import io.ktor.util.encodeBase64
+import java.io.File
 import java.net.URI
-import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.util.*
 
 val Config = Configuration()
@@ -25,7 +26,7 @@ val Image1_1 = Image(
     ownerId = User1.id,
     group = User1.username,
     name = "debian",
-    creationDate = OffsetDateTime.of(2019, 9, 28, 23, 5, 0, 0, ZoneOffset.ofHours(2))
+    creationDate = ZonedDateTime.of(2019, 9, 28, 23, 5, 0, 0, ZoneOffset.ofHours(2))
 )
 
 val ImageVersion1_1 = ImageVersion(
@@ -38,9 +39,11 @@ val ImageFormat1_1 = ImageFormat(
     version = ImageVersion1_1,
     type = ImageFormat.Type.Qcow2,
     uri = URI("/v1/user1/debian/9.0/qcow2"),
-    sha512 = "8f14ceb5224148cd03648aed62803ef9b1155062d1f685b3945f22e9298e8bdfa68d3372864b6b0dcc205e3e2da7befb439dfdd3c245ce9f20726936a612664d",
-    creationDate = OffsetDateTime.of(2019, 9, 28, 23, 5, 0, 0, ZoneOffset.ofHours(2))
+    sha512 = "b5ec5e13aebc7eee4b0b6f2352225a99f23dbdd4317c2cb79e786d3ebb4a1b4984fdc444ee95862f976e645f0667e64380acc4f1a77d47502097d572a42f592a",
+    creationDate = ZonedDateTime.of(2019, 9, 28, 23, 5, 0, 0, ZoneOffset.ofHours(2))
 )
+
+val Qcow2ImageFile = File(DefaultImageHandlerTest::class.java.getResource("/test.qcow2").file)
 
 @InternalAPI
 fun User.basicAuthentication(): String = "Basic ${"$username:changeit".encodeBase64()}"

@@ -1,6 +1,6 @@
 package io.cirrocumulus.registry.api
 
-import io.cirrocumulus.registry.api.v1.image
+import io.cirrocumulus.registry.api.v1.imageApiV1
 import io.cirrocumulus.registry.dto.*
 import io.ktor.application.Application
 import io.ktor.application.ApplicationCall
@@ -58,12 +58,12 @@ fun Application.module(dbClient: R2dbc, config: Configuration) {
     }
 
     routing {
-        image(imageRepository, imageFileManager)
+        imageApiV1(imageRepository, imageFileManager, config)
     }
 }
 
 private suspend fun ImageFormatAlreadyExistsException.send(call: ApplicationCall, config: Configuration) {
-    call.response.headers.append(HttpHeaders.Location, "${config.registry.baseUrl}/${imageFormat.uri}")
+    call.response.headers.append(HttpHeaders.Location, "${config.registry.baseUrl}/${format.uri}")
     call.respond(HttpStatusCode.Conflict, ImageFormatAlreadyExistsErrorDto)
 }
 

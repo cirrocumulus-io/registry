@@ -5,3 +5,6 @@ build
 # JetBrains
 .idea
 *.iml
+
+# Registry
+api/images

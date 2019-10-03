@@ -25,8 +25,8 @@ const val FileParameter = "file"
 const val NamePathParameter = "name"
 const val VersionPathParameter = "version"
 
-fun Routing.image(imageRepository: ImageRepository): Route = route("/v1") {
-    val handler = DefaultImageHandler(imageRepository)
+fun Routing.image(imageRepository: ImageRepository, imageFileManager: ImageFileManager): Route = route("/v1") {
+    val handler = DefaultImageHandler(imageRepository, imageFileManager)
 
     authenticate("user") {
         post("/{name}/{version}") {

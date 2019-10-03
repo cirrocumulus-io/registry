@@ -12,7 +12,9 @@ data class ImageFormat(
     val sha512: String,
     val creationDate: OffsetDateTime = OffsetDateTime.now()
 ) {
-    enum class Type {
-        Qcow2
+    enum class Type(
+        val fileExtension: String
+    ) {
+        Qcow2("qcow2")
     }
 }

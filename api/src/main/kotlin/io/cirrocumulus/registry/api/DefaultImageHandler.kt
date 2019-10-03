@@ -9,7 +9,8 @@ import java.net.URI
 import java.util.*
 
 class DefaultImageHandler(
-    private val imageRepository: ImageRepository
+    private val imageRepository: ImageRepository,
+    private val imageFileManager: ImageFileManager
 ) : ImageHandler {
     companion object {
         val AllowedFileExtensions = setOf("qcow2")
@@ -21,7 +22,7 @@ class DefaultImageHandler(
         name: String,
         version: String,
         imageOriginalFilename: String,
-        imageInput: InputStream
+        imageFileInput: InputStream
     ): ImageFormat {
         val imageFileExtension = File(imageOriginalFilename).extension
         val formatType = imageFileExtension.toFormatType()
@@ -29,6 +30,7 @@ class DefaultImageHandler(
         if (existingImageFormat != null) {
             throw ImageFormatAlreadyExistsException(existingImageFormat)
         }
+        val file = imageFileManager.write(group, name, version, formatType, imageFileInput)
         return createImageFormat(userId, group, name, version, formatType, "")
     }
 
@@ -69,8 +71,7 @@ class DefaultImageHandler(
         )
     )
 
-    private fun String.toFormatType(): ImageFormat.Type = when (this) {
-        "qcow2" -> ImageFormat.Type.Qcow2
-        else -> throw UnsupportedFormatException("${this} is not a supported format")
-    }
+    private fun String.toFormatType(): ImageFormat.Type = ImageFormat.Type.values()
+        .firstOrNull { it.fileExtension == this }
+        ?: throw UnsupportedFormatException("$this is not a supported format")
 }

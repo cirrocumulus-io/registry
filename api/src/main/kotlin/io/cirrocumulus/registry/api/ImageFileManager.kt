@@ -1,16 +1,15 @@
 package io.cirrocumulus.registry.api
 
 import io.cirrocumulus.registry.core.ImageFormat
+import java.io.File
 import java.io.InputStream
-import java.util.*
 
-interface ImageHandler {
-    suspend fun handleUpload(
-        userId: UUID,
+interface ImageFileManager {
+    suspend fun write(
         group: String,
         name: String,
         version: String,
-        imageOriginalFilename: String,
+        formatType: ImageFormat.Type,
         imageFileInput: InputStream
-    ): ImageFormat
+    ): File
 }

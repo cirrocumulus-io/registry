@@ -28,6 +28,7 @@ fun main(args: Array<String>) {
 fun Application.module(dbClient: R2dbc, config: Configuration) {
     val imageRepository = ImageR2dbcRepository(dbClient)
     val userRepository = UserR2dbcRepository(dbClient)
+    val imageFileManager = FilesystemImageFileManager(config)
 
     install(Authentication) {
         basic(name = "user") {
@@ -57,7 +58,7 @@ fun Application.module(dbClient: R2dbc, config: Configuration) {
     }
 
     routing {
-        image(imageRepository)
+        image(imageRepository, imageFileManager)
     }
 }
 

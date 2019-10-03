@@ -6,6 +6,7 @@ import io.r2dbc.pool.ConnectionPoolConfiguration
 import io.r2dbc.spi.ConnectionFactories
 import io.r2dbc.spi.ConnectionFactoryOptions
 import io.r2dbc.spi.Option
+import java.io.File
 
 data class Configuration(
     val db: Database = Database(),
@@ -42,6 +43,7 @@ data class Configuration(
     }
 
     data class Registry(
-        val baseUrl: String = "http://localhost:8080"
+        val baseUrl: String = "http://localhost:8080",
+        val imagesDir: File = File("images")
     )
 }

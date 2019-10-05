@@ -9,4 +9,5 @@ build
 # Registry
 api/etc/database.yml
 api/etc/registry.yml
+api/logs
 api/var

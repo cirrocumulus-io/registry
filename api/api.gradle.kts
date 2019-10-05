@@ -8,6 +8,19 @@ application {
     mainClassName = "io.cirrocumulus.registry.api.AppKt"
 }
 
+distributions {
+    main {
+        contents {
+            from("etc") {
+                include("*-default.yml")
+                into("etc")
+            }
+
+            from("${rootProject.projectDir}/LICENSE")
+        }
+    }
+}
+
 liquibase {
     activities.register("main") {
         arguments = mapOf(
@@ -76,8 +89,6 @@ tasks.withType<Jar> {
         attributes["Main-Class"] = application.mainClassName
         attributes["Implementation-Version"] = project.version
     }
-
-    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
 }
 
 tasks.withType<Test> {

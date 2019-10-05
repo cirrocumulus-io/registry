@@ -7,7 +7,7 @@ build
 *.iml
 
 # Registry
-api/etc/database.yml
-api/etc/registry.yml
+api/etc/*.yml
+!api/etc/*-default.yml
 api/logs
 api/var

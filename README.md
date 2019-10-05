@@ -36,6 +36,7 @@ A first user is created with username `admin` and password `changeit`.
 ### Configuration
 Configuration files are in `api/etc` directory:
 - `database.yml` which is database configuration;
+- `netty.yml` which is Netty configuration;
 - `registry.yml` which is application configuration.
 Default configuration can be found in `*-default.yml`. Note these files are just indicative.
 

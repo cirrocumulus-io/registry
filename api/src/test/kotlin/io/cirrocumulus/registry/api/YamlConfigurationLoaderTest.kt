@@ -32,13 +32,14 @@ class YamlConfigurationLoaderTest {
             loader = YamlConfigurationLoader(File(javaClass.getResource("/config/partial").file))
             loader.load() shouldBe Configuration(
                 db = Configuration.Database(host = "127.0.0.1"),
+                netty = Configuration.Netty(bindAddress = "0.0.0.0"),
                 registry = Configuration.Registry(storageDir = File("/var/registry"))
             )
         }
 
         @Test
         fun `should load config`() {
-            loader = YamlConfigurationLoader(File(javaClass.getResource("/config/valid").file))
+            loader = YamlConfigurationLoader(File(javaClass.getResource("/config/full").file))
             loader.load() shouldBe Configuration(
                 db = Configuration.Database(
                     host = "127.0.0.1",
@@ -46,6 +47,10 @@ class YamlConfigurationLoaderTest {
                     name = "registry",
                     username = "registry",
                     password = "registry"
+                ),
+                netty = Configuration.Netty(
+                    bindAddress = "0.0.0.0",
+                    port = 8181
                 ),
                 registry = Configuration.Registry(
                     baseUrl = "http://localhost:8081",

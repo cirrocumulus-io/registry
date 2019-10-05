@@ -23,13 +23,19 @@ fun main(args: Array<String>) {
     val config = YamlConfigurationLoader().load()
     LiquibaseDatabaseMigrationsExecutor(config.db).update()
     val dbClient = config.db.createClient()
-    embeddedServer(Netty, 8080) { module(dbClient, config) }.start(true)
+    embeddedServer(
+        Netty,
+        host = config.netty.bindAddress,
+        port = config.netty.port
+    ) {
+        module(dbClient, config)
+    }.start(true)
 }
 
 fun Application.module(dbClient: R2dbc, config: Configuration) {
     val imageRepository = ImageR2dbcRepository(dbClient)
     val userRepository = UserR2dbcRepository(dbClient)
-    val imageFileManager = FilesystemImageFileManager(config)
+    val imageFileManager = FilesystemImageFileManager(config.registry)
 
     install(Authentication) {
         basic(name = "user") {

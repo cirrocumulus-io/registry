@@ -11,6 +11,7 @@ import java.io.File
 
 data class Configuration(
     val db: Database = Database(),
+    val netty: Netty = Netty(),
     val registry: Registry = Registry()
 ) {
     data class Database(
@@ -44,6 +45,13 @@ data class Configuration(
             return R2dbc(dbConnectionPool)
         }
     }
+
+    data class Netty(
+        @JsonProperty("bind-address")
+        val bindAddress: String = "127.0.0.1",
+
+        val port: Int = 8080
+    )
 
     data class Registry(
         @JsonProperty("base-url")

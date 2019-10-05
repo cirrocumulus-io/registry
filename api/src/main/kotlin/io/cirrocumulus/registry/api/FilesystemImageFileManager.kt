@@ -9,7 +9,7 @@ import java.io.IOException
 import java.io.InputStream
 
 class FilesystemImageFileManager(
-    private val config: Configuration
+    private val config: Configuration.Registry
 ) : ImageFileManager {
     companion object {
         const val ImagesDirname = "images"
@@ -23,7 +23,7 @@ class FilesystemImageFileManager(
         formatType: ImageFormat.Type,
         fileInput: InputStream
     ): File = withContext(Dispatchers.IO) {
-        val dir = config.registry.storageDir
+        val dir = config.storageDir
             .resolve(ImagesDirname)
             .resolve(group)
             .resolve(name)

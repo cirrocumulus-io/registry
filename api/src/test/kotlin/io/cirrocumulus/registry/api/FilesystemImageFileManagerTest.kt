@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 
 @Suppress("ClassName")
 class FilesystemImageFileManagerTest {
-    val config = Configuration()
+    val config = Configuration.Registry()
 
     lateinit var fileManager: FilesystemImageFileManager
 
@@ -34,7 +34,7 @@ class FilesystemImageFileManagerTest {
             file shouldHaveParent format.versionName
             file.parentFile should { parent ->
                 parent shouldHaveParent format.imageName
-                parent.parentFile shouldHaveParent config.registry.storageDir.name
+                parent.parentFile shouldHaveParent config.storageDir.name
             }
             file.readBytes() shouldBe Qcow2ImageFile.inputStream().readBytes()
         }

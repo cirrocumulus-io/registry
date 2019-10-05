@@ -11,6 +11,7 @@ class YamlConfigurationLoader : ConfigurationLoader {
     companion object {
         private val ConfigDir = File("etc")
         private const val DbConfigFilename = "database.yml"
+        private const val NettyConfigFilename = "netty.yml"
         private const val RegistryConfigFilename = "registry.yml"
 
         private val Logger = LoggerFactory.getLogger(YamlConfigurationLoader::class.java)
@@ -27,9 +28,11 @@ class YamlConfigurationLoader : ConfigurationLoader {
 
     override fun load(): Configuration {
         val db = loadConfiguration(DbConfigFilename, Configuration.Database())
+        val netty = loadConfiguration(NettyConfigFilename, Configuration.Netty())
         val registry = loadConfiguration(RegistryConfigFilename, Configuration.Registry())
         return Configuration(
             db = db,
+            netty = netty,
             registry = registry
         )
     }

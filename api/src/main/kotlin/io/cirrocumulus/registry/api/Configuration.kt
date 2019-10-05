@@ -20,6 +20,8 @@ data class Configuration(
         val username: String = "cirrocumulus_registry",
         val password: String = "cirrocumulus_registry"
     ) {
+        val jdbcUrl get() = "jdbc:postgresql://$host:$port/$name"
+
         fun createClient(): R2dbc {
             val dbConnectionFactory = ConnectionFactories.get(
                 ConnectionFactoryOptions

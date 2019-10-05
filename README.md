@@ -28,7 +28,7 @@ docker-compose up -d
 
 ```shell
 docker-compose up -d
-./gradlew update run
+./gradlew run
 ```
 
 A first user is created with username `admin` and password `changeit`.

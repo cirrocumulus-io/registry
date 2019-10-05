@@ -21,6 +21,7 @@ import io.r2dbc.client.R2dbc
 
 fun main(args: Array<String>) {
     val config = YamlConfigurationLoader().load()
+    LiquibaseDatabaseMigrationsExecutor(config.db).update()
     val dbClient = config.db.createClient()
     embeddedServer(Netty, 8080) { module(dbClient, config) }.start(true)
 }

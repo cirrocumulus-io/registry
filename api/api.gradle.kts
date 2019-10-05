@@ -71,12 +71,17 @@ dependencies {
         exclude("org.jetbrains.kotlinx")
     }
 
-    liquibaseRuntime("org.liquibase:liquibase-core:3.8.0")
-    liquibaseRuntime("org.postgresql:postgresql:42.2.8")
+    val liquibaseVersion = "3.8.0"
+    implementation("org.liquibase:liquibase-core:$liquibaseVersion")
+    liquibaseRuntime("org.liquibase:liquibase-core:$liquibaseVersion")
 
     testImplementation("io.mockk:mockk:1.9.3")
 
     runtime("ch.qos.logback:logback-classic:1.2.3")
+
+    val postgresqlVersion = "42.2.8"
+    runtime("org.postgresql:postgresql:$postgresqlVersion")
+    liquibaseRuntime("org.postgresql:postgresql:$postgresqlVersion")
 
     val r2dbcVersion = "0.8.0.RC1"
     implementation("io.r2dbc:r2dbc-client:$r2dbcVersion")

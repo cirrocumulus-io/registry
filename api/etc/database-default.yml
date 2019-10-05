@@ -1,0 +1,5 @@
+host: localhost
+port: 5432
+name: cirrocumulus_registry
+username: cirrocumulus_registry
+password: cirrocumulus_registry

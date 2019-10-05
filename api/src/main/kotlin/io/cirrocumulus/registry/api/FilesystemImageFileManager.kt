@@ -12,6 +12,7 @@ class FilesystemImageFileManager(
     private val config: Configuration
 ) : ImageFileManager {
     companion object {
+        const val ImagesDirname = "images"
         private val Logger = LoggerFactory.getLogger(FilesystemImageFileManager::class.java)
     }
 
@@ -22,7 +23,8 @@ class FilesystemImageFileManager(
         formatType: ImageFormat.Type,
         fileInput: InputStream
     ): File = withContext(Dispatchers.IO) {
-        val dir = config.registry.imagesDir
+        val dir = config.registry.storageDir
+            .resolve(ImagesDirname)
             .resolve(group)
             .resolve(name)
             .resolve(versionName)

@@ -33,5 +33,14 @@ docker-compose up -d
 
 A first user is created with username `admin` and password `changeit`.
 
+### Configuration
+Configuration files are in `api/etc` directory:
+- `database.yml` which is database configuration;
+- `registry.yml` which is application configuration.
+Default configuration can be found in `*-default.yml`. Note these files are just indicative.
+
+By example, if you want customize database configuration, you can copy `database-default.yml` as `database.yml` and
+override appropriate properties.
+
 ## How to contribute
 Please open an issue to propose your feature!

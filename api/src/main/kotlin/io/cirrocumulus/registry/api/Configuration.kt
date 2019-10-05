@@ -1,5 +1,6 @@
 package io.cirrocumulus.registry.api
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.r2dbc.client.R2dbc
 import io.r2dbc.pool.ConnectionPool
 import io.r2dbc.pool.ConnectionPoolConfiguration
@@ -43,7 +44,10 @@ data class Configuration(
     }
 
     data class Registry(
+        @JsonProperty("base-url")
         val baseUrl: String = "http://localhost:8080",
-        val imagesDir: File = File("images")
+
+        @JsonProperty("storage-dir")
+        val storageDir: File = File("var")
     )
 }

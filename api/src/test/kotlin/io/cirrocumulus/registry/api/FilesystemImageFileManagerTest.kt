@@ -34,7 +34,7 @@ class FilesystemImageFileManagerTest {
             file shouldHaveParent format.versionName
             file.parentFile should { parent ->
                 parent shouldHaveParent format.imageName
-                parent.parentFile shouldHaveParent config.registry.imagesDir.name
+                parent.parentFile shouldHaveParent config.registry.storageDir.name
             }
             file.readBytes() shouldBe Qcow2ImageFile.inputStream().readBytes()
         }

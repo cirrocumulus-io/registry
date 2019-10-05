@@ -20,7 +20,7 @@ import io.ktor.server.netty.Netty
 import io.r2dbc.client.R2dbc
 
 fun main(args: Array<String>) {
-    val config = Configuration()
+    val config = YamlConfigurationLoader().load()
     val dbClient = config.db.createClient()
     embeddedServer(Netty, 8080) { module(dbClient, config) }.start(true)
 }

@@ -41,6 +41,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:$jUnitVersion")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:$jUnitVersion")
 
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.10")
+
     implementation(kotlin("stdlib"))
 
     val kotlintestVersion = "3.4.2"

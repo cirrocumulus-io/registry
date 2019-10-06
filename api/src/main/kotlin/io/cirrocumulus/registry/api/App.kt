@@ -17,7 +17,6 @@ import io.ktor.response.respond
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import io.r2dbc.client.R2dbc
 import org.slf4j.LoggerFactory
 import kotlin.system.exitProcess
 
@@ -25,13 +24,17 @@ fun main(args: Array<String>) {
     try {
         val config = YamlConfigurationLoader().load()
         LiquibaseDatabaseMigrationsExecutor(config.db).update()
+
         val dbClient = config.db.createClient()
+        val imageRepository = ImageR2dbcRepository(dbClient)
+        val userRepository = UserR2dbcRepository(dbClient)
+        val imageHandler = DefaultImageHandler(imageRepository, FilesystemImageFileManager(config.registry))
         embeddedServer(
             Netty,
             host = config.netty.bindAddress,
             port = config.netty.port
         ) {
-            module(dbClient, config)
+            module(imageHandler, userRepository, config.registry)
         }.start(true)
     } catch (exception: Exception) {
         LoggerFactory.getLogger("main").error(exception.message, exception)
@@ -39,11 +42,7 @@ fun main(args: Array<String>) {
     }
 }
 
-fun Application.module(dbClient: R2dbc, config: Configuration) {
-    val imageRepository = ImageR2dbcRepository(dbClient)
-    val userRepository = UserR2dbcRepository(dbClient)
-    val imageFileManager = FilesystemImageFileManager(config.registry)
-
+fun Application.module(imageHandler: ImageHandler, userRepository: UserRepository, config: Configuration.Registry) {
     install(Authentication) {
         basic(name = "user") {
             realm = "Cirrocumulus Registry"
@@ -73,12 +72,12 @@ fun Application.module(dbClient: R2dbc, config: Configuration) {
 
     routing {
         statusApi()
-        imageApiV1(imageRepository, imageFileManager, config)
+        imageApiV1(imageHandler, config)
     }
 }
 
-private suspend fun ImageFormatAlreadyExistsException.send(call: ApplicationCall, config: Configuration) {
-    call.response.headers.append(HttpHeaders.Location, "${config.registry.baseUrl}/${format.uri}")
+private suspend fun ImageFormatAlreadyExistsException.send(call: ApplicationCall, config: Configuration.Registry) {
+    call.response.headers.append(HttpHeaders.Location, "${config.baseUrl}/${format.uri}")
     call.respond(HttpStatusCode.Conflict, ImageFormatAlreadyExistsErrorDto)
 }
 

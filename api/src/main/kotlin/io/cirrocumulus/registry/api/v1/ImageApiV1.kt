@@ -28,10 +28,8 @@ const val FileParameter = "file"
 const val NamePathParameter = "name"
 const val VersionPathParameter = "version"
 
-fun Routing.imageApiV1(imageRepository: ImageRepository, imageFileManager: ImageFileManager, config: Configuration) =
+fun Routing.imageApiV1(handler: ImageHandler, config: Configuration.Registry) =
     route("/v1") {
-        val handler = DefaultImageHandler(imageRepository, imageFileManager)
-
         authenticate("user") {
             post("/{name}/{version}") {
                 val principal = call.principal<UserPrincipal>()!!
@@ -47,7 +45,7 @@ fun Routing.imageApiV1(imageRepository: ImageRepository, imageFileManager: Image
                         part.originalFileName!!,
                         part.streamProvider()
                     )
-                    call.response.header(HttpHeaders.Location, "${config.registry.baseUrl}${format.uri}")
+                    call.response.header(HttpHeaders.Location, "${config.baseUrl}${format.uri}")
                     call.respond(HttpStatusCode.Created)
                 } finally {
                     part.dispose

@@ -3,9 +3,11 @@ package io.cirrocumulus.registry.api
 import io.cirrocumulus.registry.core.Image
 import io.cirrocumulus.registry.core.ImageFormat
 import io.cirrocumulus.registry.core.ImageVersion
+import io.cirrocumulus.registry.core.User
 import io.kotlintest.matchers.file.shouldNotExist
 import io.kotlintest.matchers.throwable.shouldHaveMessage
 import io.kotlintest.shouldBe
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -15,6 +17,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.io.File
+import java.net.URI
 import java.sql.SQLException
 import java.time.Clock
 import java.time.Instant
@@ -22,6 +25,25 @@ import java.time.ZoneId
 
 @Suppress("ClassName", "BlockingMethodInNonBlockingContext")
 class DefaultImageHandlerTest {
+    val qcow2File = File(DefaultImageHandler::class.java.getResource("/test.qcow2").file)
+    val user = User(
+        username = "user1",
+        password = "\$2a\$12\$21SFFJSkRWjAeFt21v5mOe6lzDb7bvDfgcBVG66UB6/2mBYv8xOxS"
+    )
+    val format = ImageFormat(
+        version = ImageVersion(
+            image = Image(
+                ownerId = user.id,
+                group = user.username,
+                name = "fedora"
+            ),
+            name = "30"
+        ),
+        type = ImageFormat.Type.Qcow2,
+        uri = URI("/v1/user1/fedora/30/qcow2"),
+        sha512 = "b5ec5e13aebc7eee4b0b6f2352225a99f23dbdd4317c2cb79e786d3ebb4a1b4984fdc444ee95862f976e645f0667e64380acc4f1a77d47502097d572a42f592a"
+    )
+
     lateinit var imageRepository: ImageRepository
     lateinit var imageFileManager: ImageFileManager
     lateinit var clock: Clock
@@ -46,12 +68,12 @@ class DefaultImageHandlerTest {
             val exception = assertThrows<UnsupportedFormatException> {
                 runBlocking {
                     handler.handleUpload(
-                        User1.id,
-                        ImageFormat1_1.imageGroup,
-                        ImageFormat1_1.imageName,
-                        ImageFormat1_1.versionName,
+                        user.id,
+                        "group",
+                        "name",
+                        "version",
                         "test.txt",
-                        Qcow2ImageFile.inputStream()
+                        qcow2File.inputStream()
                     )
                 }
             }
@@ -60,17 +82,13 @@ class DefaultImageHandlerTest {
 
         @Test
         fun `should fail if format already exists`() {
-            val format = ImageFormat1_1
-
-            every {
-                runBlocking {
-                    imageRepository.findFormat(
-                        format.imageGroup,
-                        format.imageName,
-                        format.versionName,
-                        ImageFormat.Type.Qcow2
-                    )
-                }
+            coEvery {
+                imageRepository.findFormat(
+                    format.imageGroup,
+                    format.imageName,
+                    format.versionName,
+                    ImageFormat.Type.Qcow2
+                )
             } returns format
 
             val exception = assertThrows<ImageFormatAlreadyExistsException> {
@@ -80,8 +98,8 @@ class DefaultImageHandlerTest {
                         format.imageGroup,
                         format.imageName,
                         format.versionName,
-                        Qcow2ImageFile.name,
-                        Qcow2ImageFile.inputStream()
+                        qcow2File.name,
+                        qcow2File.inputStream()
                     )
                 }
             }
@@ -90,64 +108,37 @@ class DefaultImageHandlerTest {
 
         @Test
         fun `should remove file if database error occurred`() = runBlocking {
-            val expectedImageFormat = ImageFormat1_1
-            val imageInput = Qcow2ImageFile.inputStream()
-            val file = Qcow2ImageFile.copyTo(File("${Qcow2ImageFile.parent}/test-copy.qcow2"))
+            val imageInput = qcow2File.inputStream()
+            val file = qcow2File.copyTo(File("${qcow2File.parent}/test-copy.qcow2"))
             file.createNewFile()
 
-            every {
-                runBlocking {
-                    imageRepository.findFormat(
-                        expectedImageFormat.imageGroup,
-                        expectedImageFormat.imageName,
-                        expectedImageFormat.versionName,
-                        expectedImageFormat.type
-                    )
-                }
+            coEvery {
+                imageRepository.findFormat(format.imageGroup, format.imageName, format.versionName, format.type)
             } returns null
 
-            every {
-                runBlocking {
-                    imageFileManager.write(
-                        expectedImageFormat.imageGroup,
-                        expectedImageFormat.imageName,
-                        expectedImageFormat.versionName,
-                        expectedImageFormat.type,
-                        imageInput
-                    )
-                }
+            coEvery {
+                imageFileManager.write(format.imageGroup, format.imageName, format.versionName, format.type, imageInput)
             } returns file
 
-            every {
-                runBlocking {
-                    imageRepository.findVersion(
-                        expectedImageFormat.imageGroup,
-                        expectedImageFormat.imageName,
-                        expectedImageFormat.versionName
-                    )
-                }
-            } returns expectedImageFormat.version
+            coEvery {
+                imageRepository.findVersion(format.imageGroup, format.imageName, format.versionName)
+            } returns format.version
 
-            every {
-                runBlocking {
-                    imageRepository.find(
-                        expectedImageFormat.imageGroup,
-                        expectedImageFormat.imageName
-                    )
-                }
-            } returns expectedImageFormat.image
+            coEvery {
+                imageRepository.find(format.imageGroup, format.imageName)
+            } returns format.image
 
             val expectedException = SQLException()
-            every { runBlocking { imageRepository.createFormat(any()) } } answers { throw expectedException }
+            coEvery { imageRepository.createFormat(any()) } answers { throw expectedException }
 
             val exception = assertThrows<SQLException> {
                 runBlocking {
                     handler.handleUpload(
-                        expectedImageFormat.image.ownerId,
-                        expectedImageFormat.imageGroup,
-                        expectedImageFormat.imageName,
-                        expectedImageFormat.versionName,
-                        Qcow2ImageFile.name,
+                        format.image.ownerId,
+                        format.imageGroup,
+                        format.imageName,
+                        format.versionName,
+                        qcow2File.name,
                         imageInput
                     )
                 }
@@ -158,214 +149,128 @@ class DefaultImageHandlerTest {
 
         @Test
         fun `should return created image format`() = runBlocking {
-            val expectedImageFormat = ImageFormat1_1
-            val imageInput = Qcow2ImageFile.inputStream()
+            val imageInput = qcow2File.inputStream()
 
-            every {
-                runBlocking {
-                    imageRepository.findFormat(
-                        expectedImageFormat.imageGroup,
-                        expectedImageFormat.imageName,
-                        expectedImageFormat.versionName,
-                        expectedImageFormat.type
-                    )
-                }
+            coEvery {
+                imageRepository.findFormat(format.imageGroup, format.imageName, format.versionName, format.type)
             } returns null
 
-            every {
-                runBlocking {
-                    imageFileManager.write(
-                        expectedImageFormat.imageGroup,
-                        expectedImageFormat.imageName,
-                        expectedImageFormat.versionName,
-                        expectedImageFormat.type,
-                        imageInput
-                    )
-                }
-            } returns Qcow2ImageFile
+            coEvery {
+                imageFileManager.write(format.imageGroup, format.imageName, format.versionName, format.type, imageInput)
+            } returns qcow2File
 
-            every {
-                runBlocking {
-                    imageRepository.findVersion(
-                        expectedImageFormat.imageGroup,
-                        expectedImageFormat.imageName,
-                        expectedImageFormat.versionName
-                    )
-                }
-            } returns expectedImageFormat.version
+            coEvery {
+                imageRepository.findVersion(format.imageGroup, format.imageName, format.versionName)
+            } returns format.version
 
-            every {
-                runBlocking {
-                    imageRepository.find(
-                        expectedImageFormat.imageGroup,
-                        expectedImageFormat.imageName
-                    )
-                }
-            } returns expectedImageFormat.image
+            coEvery {
+                imageRepository.find(format.imageGroup, format.imageName)
+            } returns format.image
 
             val formatSlot = slot<ImageFormat>()
-            every { runBlocking { imageRepository.createFormat(capture(formatSlot)) } } answers { formatSlot.captured }
+            coEvery { imageRepository.createFormat(capture(formatSlot)) } answers { formatSlot.captured }
 
-            val format = handler.handleUpload(
-                expectedImageFormat.image.ownerId,
-                expectedImageFormat.imageGroup,
-                expectedImageFormat.imageName,
-                expectedImageFormat.versionName,
-                Qcow2ImageFile.name,
-                imageInput
-            )
-            format shouldBe ImageFormat1_1.copy(
-                id = formatSlot.captured.id,
-                creationDate = clock.instant().atZone(clock.zone)
-            )
+            handler
+                .handleUpload(
+                    format.image.ownerId,
+                    format.imageGroup,
+                    format.imageName,
+                    format.versionName,
+                    qcow2File.name,
+                    imageInput
+                )
+                .shouldBe(format.copy(id = formatSlot.captured.id, creationDate = clock.instant().atZone(clock.zone)))
         }
 
         @Test
         fun `should create version and return created image format`() = runBlocking {
-            val expectedImageFormat = ImageFormat1_1
-            val imageInput = Qcow2ImageFile.inputStream()
+            val imageInput = qcow2File.inputStream()
 
-            every {
-                runBlocking {
-                    imageRepository.findFormat(
-                        expectedImageFormat.imageGroup,
-                        expectedImageFormat.imageName,
-                        expectedImageFormat.versionName,
-                        expectedImageFormat.type
-                    )
-                }
+            coEvery {
+                imageRepository.findFormat(format.imageGroup, format.imageName, format.versionName, format.type)
             } returns null
 
-            every {
-                runBlocking {
-                    imageFileManager.write(
-                        expectedImageFormat.imageGroup,
-                        expectedImageFormat.imageName,
-                        expectedImageFormat.versionName,
-                        expectedImageFormat.type,
-                        imageInput
-                    )
-                }
-            } returns Qcow2ImageFile
+            coEvery {
+                imageFileManager.write(format.imageGroup, format.imageName, format.versionName, format.type, imageInput)
+            } returns qcow2File
 
-            every {
-                runBlocking {
-                    imageRepository.findVersion(
-                        expectedImageFormat.imageGroup,
-                        expectedImageFormat.imageName,
-                        expectedImageFormat.versionName
-                    )
-                }
+            coEvery {
+                imageRepository.findVersion(format.imageGroup, format.imageName, format.versionName)
             } returns null
 
-            every {
-                runBlocking {
-                    imageRepository.find(
-                        expectedImageFormat.imageGroup,
-                        expectedImageFormat.imageName
-                    )
-                }
-            } returns expectedImageFormat.image
+            coEvery { imageRepository.find(format.imageGroup, format.imageName) } returns format.image
 
             val versionSlot = slot<ImageVersion>()
             val formatSlot = slot<ImageFormat>()
-            every { runBlocking { imageRepository.createVersion(capture(versionSlot)) } } answers {
-                versionSlot.captured
-            }
-            every { runBlocking { imageRepository.createFormat(capture(formatSlot)) } } answers { formatSlot.captured }
+            coEvery { imageRepository.createVersion(capture(versionSlot)) } answers { versionSlot.captured }
+            coEvery { imageRepository.createFormat(capture(formatSlot)) } answers { formatSlot.captured }
 
-            val format = handler.handleUpload(
-                expectedImageFormat.image.ownerId,
-                expectedImageFormat.imageGroup,
-                expectedImageFormat.imageName,
-                expectedImageFormat.versionName,
-                Qcow2ImageFile.name,
-                imageInput
-            )
-            versionSlot.captured shouldBe expectedImageFormat.version.copy(id = versionSlot.captured.id)
-            format shouldBe ImageFormat1_1.copy(
-                id = formatSlot.captured.id,
-                version = versionSlot.captured,
-                creationDate = clock.instant().atZone(clock.zone)
-            )
+            handler
+                .handleUpload(
+                    format.image.ownerId,
+                    format.imageGroup,
+                    format.imageName,
+                    format.versionName,
+                    qcow2File.name,
+                    imageInput
+                )
+                .shouldBe(
+                    format.copy(
+                        id = formatSlot.captured.id,
+                        version = versionSlot.captured,
+                        creationDate = clock.instant().atZone(clock.zone)
+                    )
+                )
+            versionSlot.captured shouldBe format.version.copy(id = versionSlot.captured.id)
         }
 
         @Test
         fun `should create image, version and return created image format`() = runBlocking {
-            val expectedImageFormat = ImageFormat1_1
-            val imageInput = Qcow2ImageFile.inputStream()
+            val imageInput = qcow2File.inputStream()
 
-            every {
-                runBlocking {
-                    imageRepository.findFormat(
-                        expectedImageFormat.imageGroup,
-                        expectedImageFormat.imageName,
-                        expectedImageFormat.versionName,
-                        expectedImageFormat.type
-                    )
-                }
+            coEvery {
+                imageRepository.findFormat(format.imageGroup, format.imageName, format.versionName, format.type)
             } returns null
 
-            every {
-                runBlocking {
-                    imageFileManager.write(
-                        expectedImageFormat.imageGroup,
-                        expectedImageFormat.imageName,
-                        expectedImageFormat.versionName,
-                        expectedImageFormat.type,
-                        imageInput
-                    )
-                }
-            } returns Qcow2ImageFile
+            coEvery {
+                imageFileManager.write(format.imageGroup, format.imageName, format.versionName, format.type, imageInput)
+            } returns qcow2File
 
-            every {
-                runBlocking {
-                    imageRepository.findVersion(
-                        expectedImageFormat.imageGroup,
-                        expectedImageFormat.imageName,
-                        expectedImageFormat.versionName
-                    )
-                }
+            coEvery {
+                imageRepository.findVersion(format.imageGroup, format.imageName, format.versionName)
             } returns null
 
-            every {
-                runBlocking {
-                    imageRepository.find(
-                        expectedImageFormat.imageGroup,
-                        expectedImageFormat.imageName
-                    )
-                }
-            } returns null
+            coEvery { imageRepository.find(format.imageGroup, format.imageName) } returns null
 
             val imageSlot = slot<Image>()
             val versionSlot = slot<ImageVersion>()
             val formatSlot = slot<ImageFormat>()
-            every { runBlocking { imageRepository.create(capture(imageSlot)) } } answers { imageSlot.captured }
-            every { runBlocking { imageRepository.createVersion(capture(versionSlot)) } } answers {
-                versionSlot.captured
-            }
-            every { runBlocking { imageRepository.createFormat(capture(formatSlot)) } } answers { formatSlot.captured }
+            coEvery { imageRepository.create(capture(imageSlot)) } answers { imageSlot.captured }
+            coEvery { imageRepository.createVersion(capture(versionSlot)) } answers { versionSlot.captured }
+            coEvery { imageRepository.createFormat(capture(formatSlot)) } answers { formatSlot.captured }
 
-            val format = handler.handleUpload(
-                expectedImageFormat.image.ownerId,
-                expectedImageFormat.imageGroup,
-                expectedImageFormat.imageName,
-                expectedImageFormat.versionName,
-                Qcow2ImageFile.name,
-                imageInput
-            )
-            imageSlot.captured shouldBe expectedImageFormat.image.copy(
+            handler
+                .handleUpload(
+                    format.image.ownerId,
+                    format.imageGroup,
+                    format.imageName,
+                    format.versionName,
+                    qcow2File.name,
+                    imageInput
+                ).shouldBe(
+                    format.copy(
+                        id = formatSlot.captured.id,
+                        version = versionSlot.captured,
+                        creationDate = clock.instant().atZone(clock.zone)
+                    )
+                )
+            imageSlot.captured shouldBe format.image.copy(
                 id = imageSlot.captured.id,
                 creationDate = clock.instant().atZone(clock.zone)
             )
-            versionSlot.captured shouldBe expectedImageFormat.version.copy(
+            versionSlot.captured shouldBe format.version.copy(
                 id = versionSlot.captured.id,
                 image = imageSlot.captured
-            )
-            format shouldBe ImageFormat1_1.copy(
-                id = formatSlot.captured.id,
-                version = versionSlot.captured,
-                creationDate = clock.instant().atZone(clock.zone)
             )
         }
     }

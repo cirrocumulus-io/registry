@@ -110,25 +110,6 @@ tasks.withType<ProcessResources> {
 
 tasks.withType<Test> {
     dependsOn("update")
-
-    doFirst {
-        exec {
-            executable("psql")
-            args(
-                listOf(
-                    "-h",
-                    "127.0.0.1",
-                    "-U",
-                    "cirrocumulus_registry",
-                    "-v",
-                    "ON_ERROR_STOP=1",
-                    "cirrocumulus_registry"
-                )
-            )
-            environment("PGPASSWORD", "cirrocumulus_registry")
-            standardInput = File("$projectDir/src/test/resources/sql/init.sql").inputStream()
-        }
-    }
 }
 
 fun currentCommitHash(): String {

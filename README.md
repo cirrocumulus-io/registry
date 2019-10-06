@@ -12,9 +12,7 @@ Provide a REST API to share image used by Cirrocumulus.
 :warning: **The database is reset before tests executing**
 
 ### Prerequisites
-* docker
 * docker-compose
-* psql
 
 ```shell
 docker-compose up -d
@@ -23,7 +21,6 @@ docker-compose up -d
 
 ## How to execute
 ### Prerequisites
-* docker
 * docker-compose
 
 ```shell

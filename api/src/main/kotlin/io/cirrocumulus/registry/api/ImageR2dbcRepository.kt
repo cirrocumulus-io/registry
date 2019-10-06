@@ -5,7 +5,6 @@ import io.cirrocumulus.registry.core.ImageFormat
 import io.cirrocumulus.registry.core.ImageVersion
 import io.r2dbc.client.R2dbc
 import io.r2dbc.spi.Row
-import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import java.net.URI
@@ -73,7 +72,7 @@ class ImageR2dbcRepository(
                 )
                 .map { format }
         }
-        .awaitFirst()
+        .awaitSingle()
 
     override suspend fun createVersion(version: ImageVersion): ImageVersion = dbClient
         .inTransaction { handle ->

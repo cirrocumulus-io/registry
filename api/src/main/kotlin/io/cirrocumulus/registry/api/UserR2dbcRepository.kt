@@ -11,10 +11,10 @@ class UserR2dbcRepository(
     private val dbClient: R2dbc
 ) : UserRepository {
     internal companion object {
-        const val IdColumnName = "id"
-        const val PasswordColumnName = "password"
+        const val IdColumn = "id"
+        const val PasswordColumn = "password"
         const val UserTable = "user"
-        const val UsernameColumnName = "username"
+        const val UsernameColumn = "username"
     }
 
     override suspend fun findByCredentials(username: String, password: String): User? = dbClient
@@ -24,7 +24,7 @@ class UserR2dbcRepository(
                     """
                         SELECT * 
                         FROM "$UserTable" 
-                        WHERE $UsernameColumnName = $1
+                        WHERE $UsernameColumn = $1
                     """.trimIndent()
                 )
                 .bind("$1", username)
@@ -35,8 +35,8 @@ class UserR2dbcRepository(
         .awaitFirstOrNull()
 
     private fun Row.toUser(): User = User(
-        id = get(IdColumnName, UUID::class.java)!!,
-        username = get(UsernameColumnName, String::class.java)!!,
-        password = get(PasswordColumnName, String::class.java)!!
+        id = get(IdColumn, UUID::class.java)!!,
+        username = get(UsernameColumn, String::class.java)!!,
+        password = get(PasswordColumn, String::class.java)!!
     )
 }

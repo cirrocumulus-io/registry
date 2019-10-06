@@ -41,6 +41,7 @@
                 <constraints nullable="false" />
             </column>
         </createTable>
+        <addUniqueConstraint tableName="image" columnNames="group,name" />
         <addForeignKeyConstraint baseTableName="image"
                                  baseColumnNames="owner_id"
                                  constraintName="image_owner_fk"
@@ -59,6 +60,7 @@
                 <constraints nullable="false" />
             </column>
         </createTable>
+        <addUniqueConstraint tableName="image_version" columnNames="image_id,name" />
         <addForeignKeyConstraint baseTableName="image_version"
                                  baseColumnNames="image_id"
                                  constraintName="image_version_image_fk"
@@ -90,6 +92,7 @@
                 <constraints nullable="false" />
             </column>
         </createTable>
+        <addUniqueConstraint tableName="image_format" columnNames="version_id,type" />
         <addForeignKeyConstraint baseTableName="image_format"
                                  baseColumnNames="version_id"
                                  constraintName="image_format_version_fk"

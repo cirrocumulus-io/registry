@@ -3,6 +3,7 @@ package io.cirrocumulus.registry.api
 import io.cirrocumulus.registry.core.Image
 import io.cirrocumulus.registry.core.ImageFormat
 import io.cirrocumulus.registry.core.ImageVersion
+import io.kotlintest.matchers.file.shouldNotExist
 import io.kotlintest.matchers.throwable.shouldHaveMessage
 import io.kotlintest.shouldBe
 import io.mockk.every
@@ -13,11 +14,13 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.io.File
+import java.sql.SQLException
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
 
-@Suppress("ClassName")
+@Suppress("ClassName", "BlockingMethodInNonBlockingContext")
 class DefaultImageHandlerTest {
     lateinit var imageRepository: ImageRepository
     lateinit var imageFileManager: ImageFileManager
@@ -83,6 +86,74 @@ class DefaultImageHandlerTest {
                 }
             }
             exception.format shouldBe format
+        }
+
+        @Test
+        fun `should remove file if database error occurred`() = runBlocking {
+            val expectedImageFormat = ImageFormat1_1
+            val imageInput = Qcow2ImageFile.inputStream()
+            val file = Qcow2ImageFile.copyTo(File("${Qcow2ImageFile.parent}/test-copy.qcow2"))
+            file.createNewFile()
+
+            every {
+                runBlocking {
+                    imageRepository.findFormat(
+                        expectedImageFormat.imageGroup,
+                        expectedImageFormat.imageName,
+                        expectedImageFormat.versionName,
+                        expectedImageFormat.type
+                    )
+                }
+            } returns null
+
+            every {
+                runBlocking {
+                    imageFileManager.write(
+                        expectedImageFormat.imageGroup,
+                        expectedImageFormat.imageName,
+                        expectedImageFormat.versionName,
+                        expectedImageFormat.type,
+                        imageInput
+                    )
+                }
+            } returns file
+
+            every {
+                runBlocking {
+                    imageRepository.findVersion(
+                        expectedImageFormat.imageGroup,
+                        expectedImageFormat.imageName,
+                        expectedImageFormat.versionName
+                    )
+                }
+            } returns expectedImageFormat.version
+
+            every {
+                runBlocking {
+                    imageRepository.find(
+                        expectedImageFormat.imageGroup,
+                        expectedImageFormat.imageName
+                    )
+                }
+            } returns expectedImageFormat.image
+
+            val expectedException = SQLException()
+            every { runBlocking { imageRepository.createFormat(any()) } } answers { throw expectedException }
+
+            val exception = assertThrows<SQLException> {
+                runBlocking {
+                    handler.handleUpload(
+                        expectedImageFormat.image.ownerId,
+                        expectedImageFormat.imageGroup,
+                        expectedImageFormat.imageName,
+                        expectedImageFormat.versionName,
+                        Qcow2ImageFile.name,
+                        imageInput
+                    )
+                }
+            }
+            exception shouldBe expectedException
+            file.shouldNotExist()
         }
 
         @Test

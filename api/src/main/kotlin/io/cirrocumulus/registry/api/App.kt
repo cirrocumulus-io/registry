@@ -18,18 +18,25 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.r2dbc.client.R2dbc
+import org.slf4j.LoggerFactory
+import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
-    val config = YamlConfigurationLoader().load()
-    LiquibaseDatabaseMigrationsExecutor(config.db).update()
-    val dbClient = config.db.createClient()
-    embeddedServer(
-        Netty,
-        host = config.netty.bindAddress,
-        port = config.netty.port
-    ) {
-        module(dbClient, config)
-    }.start(true)
+    try {
+        val config = YamlConfigurationLoader().load()
+        LiquibaseDatabaseMigrationsExecutor(config.db).update()
+        val dbClient = config.db.createClient()
+        embeddedServer(
+            Netty,
+            host = config.netty.bindAddress,
+            port = config.netty.port
+        ) {
+            module(dbClient, config)
+        }.start(true)
+    } catch (exception: Exception) {
+        LoggerFactory.getLogger("main").error(exception.message, exception)
+        exitProcess(1)
+    }
 }
 
 fun Application.module(dbClient: R2dbc, config: Configuration) {

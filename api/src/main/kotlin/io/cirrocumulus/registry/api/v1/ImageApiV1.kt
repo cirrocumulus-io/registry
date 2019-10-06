@@ -38,16 +38,20 @@ fun Routing.imageApiV1(imageRepository: ImageRepository, imageFileManager: Image
                 val name = call.parameters[NamePathParameter]!!
                 val versionName = call.parameters[VersionPathParameter]!!
                 val part = findFilePart()
-                val format = handler.handleUpload(
-                    principal.id,
-                    principal.username,
-                    name,
-                    versionName,
-                    part.originalFileName!!,
-                    part.streamProvider()
-                )
-                call.response.header(HttpHeaders.Location, "${config.registry.baseUrl}${format.uri}")
-                call.respond(HttpStatusCode.Created)
+                try {
+                    val format = handler.handleUpload(
+                        principal.id,
+                        principal.username,
+                        name,
+                        versionName,
+                        part.originalFileName!!,
+                        part.streamProvider()
+                    )
+                    call.response.header(HttpHeaders.Location, "${config.registry.baseUrl}${format.uri}")
+                    call.respond(HttpStatusCode.Created)
+                } finally {
+                    part.dispose
+                }
             }
         }
     }

@@ -50,7 +50,13 @@ class DefaultImageHandler : ImageHandler {
             throw ImageFormatAlreadyExistsException(existingImageFormat)
         }
         val file = imageFileManager.write(group, name, versionName, formatType, imageFileInput)
-        return createImageFormat(userId, group, name, versionName, formatType, file.computeSha512())
+        try {
+            return createImageFormat(userId, group, name, versionName, formatType, file.computeSha512())
+        } catch (exception: Exception) {
+            file.delete()
+            Logger.debug("{} deleted due error", file)
+            throw exception
+        }
     }
 
     private suspend fun File.computeSha512(): String {
@@ -60,34 +66,26 @@ class DefaultImageHandler : ImageHandler {
         }
     }
 
-    private suspend fun createImage(userId: UUID, group: String, name: String): Image {
-        val image = imageRepository.create(
-            Image(
-                ownerId = userId,
-                group = group,
-                name = name,
-                creationDate = clock.instant().atZone(clock.zone)
-            )
+    private suspend fun createImage(userId: UUID, group: String, name: String) = imageRepository.create(
+        Image(
+            ownerId = userId,
+            group = group,
+            name = name,
+            creationDate = clock.instant().atZone(clock.zone)
         )
-        Logger.info("New image {}/{} created", image.group, image.name)
-        return image
-    }
+    )
 
     private suspend fun createImageVersion(
         userId: UUID,
         group: String,
         name: String,
         versionName: String
-    ): ImageVersion {
-        val version = imageRepository.createVersion(
-            ImageVersion(
-                image = imageRepository.find(group, name) ?: createImage(userId, group, name),
-                name = versionName
-            )
+    ) = imageRepository.createVersion(
+        ImageVersion(
+            image = imageRepository.find(group, name) ?: createImage(userId, group, name),
+            name = versionName
         )
-        Logger.info("New image version {}/{}/{} created", version.imageGroup, version.imageName, version.name)
-        return version
-    }
+    )
 
     private suspend fun createImageFormat(
         userId: UUID,
@@ -111,13 +109,7 @@ class DefaultImageHandler : ImageHandler {
                 creationDate = clock.instant().atZone(clock.zone)
             )
         )
-        Logger.info(
-            "New image format {}/{}/{}/{}",
-            format.imageGroup,
-            format.imageName,
-            format.versionName,
-            format.type
-        )
+        Logger.info("New image format {}", format.uri)
         return format
     }
 

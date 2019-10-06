@@ -1,3 +1,5 @@
+import java.io.ByteArrayOutputStream
+
 plugins {
     application
     kotlin("jvm")
@@ -5,6 +7,7 @@ plugins {
 }
 
 application {
+    applicationName = rootProject.name
     mainClassName = "io.cirrocumulus.registry.api.AppKt"
 }
 
@@ -24,10 +27,10 @@ distributions {
 liquibase {
     activities.register("main") {
         arguments = mapOf(
-                "changeLogFile" to "src/main/resources/db/changelog.xml",
-                "url" to "jdbc:postgresql://localhost:5432/cirrocumulus_registry",
-                "username" to "cirrocumulus_registry",
-                "password" to "cirrocumulus_registry"
+            "changeLogFile" to "src/main/resources/db/changelog.xml",
+            "url" to "jdbc:postgresql://localhost:5432/cirrocumulus_registry",
+            "username" to "cirrocumulus_registry",
+            "password" to "cirrocumulus_registry"
         )
     }
 }
@@ -96,6 +99,15 @@ tasks.withType<Jar> {
     }
 }
 
+tasks.withType<ProcessResources> {
+    filesMatching("metadata.yml") {
+        expand(
+            "version" to project.version,
+            "build" to currentCommitHash()
+        )
+    }
+}
+
 tasks.withType<Test> {
     dependsOn("update")
 
@@ -117,4 +129,14 @@ tasks.withType<Test> {
             standardInput = File("$projectDir/src/test/resources/sql/init.sql").inputStream()
         }
     }
+}
+
+fun currentCommitHash(): String {
+    val stdout = ByteArrayOutputStream()
+    exec {
+        executable("git")
+        args(listOf("rev-parse", "--short", "HEAD"))
+        standardOutput = stdout
+    }
+    return stdout.toString(Charsets.UTF_8)
 }

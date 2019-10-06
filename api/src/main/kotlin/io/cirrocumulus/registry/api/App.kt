@@ -65,6 +65,7 @@ fun Application.module(dbClient: R2dbc, config: Configuration) {
     }
 
     routing {
+        statusApi()
         imageApiV1(imageRepository, imageFileManager, config)
     }
 }
